@@ -1,0 +1,4291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOD2 Task Cockpit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E2A47;
+    --navy-2:#15375C;
+    --steel:#44607C;
+    --bg:#F2F5F8;
+    --card:#FFFFFF;
+    --border:#E1E7ED;
+    --text:#1A2733;
+    --text-muted:#6B7785;
+    --green:#2E9E5B;
+    --green-bg:#E6F4EC;
+    --amber:#D98E04;
+    --amber-bg:#FCF1DD;
+    --red:#D64545;
+    --red-bg:#FBE7E7;
+    --teal:#1F8A8C;
+    --teal-bg:#E4F2F2;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Header ===== */
+  .header{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-2) 100%);
+    color:#fff;
+    padding:22px 28px;
+    border-radius:0 0 16px 16px;
+  }
+  .header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .header-title{
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .header-sub{
+    font-size:12.5px;
+    color:#AFC4D9;
+    margin-top:4px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .stat-chips{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:10px;
+    padding:8px 14px;
+    min-width:96px;
+    text-align:center;
+  }
+  .chip .chip-num{
+    font-size:20px;
+    font-weight:800;
+    font-family:'JetBrains Mono',monospace;
+    line-height:1.1;
+  }
+  .chip .chip-label{
+    font-size:10.5px;
+    color:#AFC4D9;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-top:2px;
+  }
+  .chip.red .chip-num{color:#FF8A8A;}
+  .chip.amber .chip-num{color:#FFCB6B;}
+  .chip.green .chip-num{color:#7CE3AB;}
+
+  /* ===== Radar (signature timeline) ===== */
+  .radar-section{
+    margin:18px 28px 0 28px;
+  }
+  .radar-title{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--text-muted);
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .radar{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:6px;
+  }
+  .radar-month{
+    flex:0 0 auto;
+    min-width:110px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:10px 12px;
+    cursor:pointer;
+    transition:border-color .15s, transform .1s;
+  }
+  .radar-month:hover{
+    border-color:var(--teal);
+    transform:translateY(-1px);
+  }
+  .radar-month.active{
+    border-color:var(--navy);
+    box-shadow:0 0 0 2px rgba(14,42,71,.12);
+  }
+  .radar-month .rm-label{
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .radar-month .rm-count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .radar-bar{
+    display:flex;
+    height:8px;
+    border-radius:4px;
+    overflow:hidden;
+    background:#EEF1F4;
+  }
+  .radar-bar span{display:block;height:100%;}
+
+  /* ===== Toolbar ===== */
+  .toolbar{
+    margin:18px 28px 0 28px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+  .toolbar input[type="text"]{
+    flex:1 1 200px;
+    padding:8px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+  }
+  .toolbar select{
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:13px;
+    background:#fff;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+  }
+  .toolbar .btn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--steel);
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .toolbar .btn:hover{border-color:var(--teal); color:var(--teal);}
+  .toolbar .btn-primary{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+  }
+  .toolbar .btn-primary:hover{background:var(--navy-2); color:#fff; border-color:var(--navy-2);}
+  .view-toggle{
+    display:flex;
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .view-toggle button{
+    border:none;
+    background:#fff;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--steel);
+  }
+  .view-toggle button.active{
+    background:var(--navy);
+    color:#fff;
+  }
+  .toggle-pill{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    color:var(--steel);
+    cursor:pointer;
+    user-select:none;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:#fff;
+  }
+  .toggle-pill input{
+    width:14px; height:14px;
+    accent-color:var(--navy);
+    cursor:pointer;
+  }
+
+  /* ===== Content ===== */
+  .content{
+    margin:14px 28px 28px 28px;
+  }
+  .count-line{
+    font-size:12px;
+    color:var(--text-muted);
+    margin-bottom:8px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  /* ===== Table ===== */
+  .table-wrap{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:auto;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    min-width:1040px;
+  }
+  thead th{
+    text-align:left;
+    padding:10px 12px;
+    background:#F8FAFC;
+    border-bottom:1px solid var(--border);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+    cursor:pointer;
+    white-space:nowrap;
+    user-select:none;
+  }
+  thead th:hover{color:var(--navy);}
+  thead th.nosort{cursor:default;}
+  thead th.nosort:hover{color:var(--text-muted);}
+  thead th.sorted::after{content:" \25BE"; font-size:9px;}
+  thead th.sorted.asc::after{content:" \25B4"; font-size:9px;}
+  tbody td{
+    padding:9px 12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+  }
+  tbody tr:hover{background:#FAFCFE;}
+  .task-name{font-weight:600; color:var(--text);}
+  .badge{
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:6px;
+    font-size:11px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .team-badge{
+    color:#fff;
+    font-size:10.5px;
+    letter-spacing:.04em;
+  }
+  .prio-Critical{background:var(--red-bg); color:var(--red);}
+  .prio-High{background:var(--amber-bg); color:var(--amber);}
+  .prio-Medium{background:#E6ECF4; color:var(--navy-2);}
+  .prio-Low{background:#EEF1F4; color:var(--text-muted);}
+
+  .rag-dot{
+    display:inline-block;
+    width:11px;height:11px;
+    border-radius:50%;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+  .rag-Green{background:var(--green);}
+  .rag-Amber{background:var(--amber);}
+  .rag-Red{background:var(--red);}
+
+  select.cell-edit{
+    border:1px solid transparent;
+    background:transparent;
+    font-size:12.5px;
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+    cursor:pointer;
+    padding:3px 4px;
+    border-radius:6px;
+  }
+  select.cell-edit:hover{border-color:var(--border); background:#fff;}
+
+  .days-left{font-family:'JetBrains Mono',monospace; font-weight:600;}
+  .days-overdue{color:var(--red);}
+  .days-soon{color:var(--amber);}
+  .days-ok{color:var(--text-muted);}
+  .due-date{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted);}
+
+  .edit-btn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--steel);
+    padding:4px 10px;
+    border-radius:6px;
+    font-size:11.5px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .edit-btn:hover{border-color:var(--teal); color:var(--teal);}
+
+  /* ===== Board ===== */
+  .board{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+  }
+  .board-col{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:10px;
+    min-height:200px;
+  }
+  .board-col h3{
+    font-size:13px;
+    margin:2px 6px 10px 6px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .board-col h3 .count{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--text-muted);
+    font-weight:500;
+    font-size:12px;
+  }
+  .board-card{
+    background:#FBFCFE;
+    border:1px solid var(--border);
+    border-left:4px solid var(--green);
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:8px;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:border-color .15s;
+  }
+  .board-card:hover{border-color:var(--teal);}
+  .board-card.rag-border-Amber{border-left-color:var(--amber);}
+  .board-card.rag-border-Red{border-left-color:var(--red);}
+  .board-card .bc-title{
+    font-weight:600;
+    margin-bottom:6px;
+    line-height:1.3;
+  }
+  .board-card .bc-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center;
+    margin-bottom:4px;
+  }
+  .board-card .bc-foot{
+    display:flex;
+    justify-content:space-between;
+    color:var(--text-muted);
+    font-size:11.5px;
+    margin-top:6px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .hidden{display:none !important;}
+
+  .footer-note{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-muted);
+    margin:6px 0 18px 0;
+  }
+
+  /* ===== Modal ===== */
+  .modal-overlay{
+    position:fixed;
+    top:0; left:0; right:0; bottom:0;
+    background:rgba(14,42,71,.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+  }
+  .modal{
+    background:#fff;
+    border-radius:14px;
+    width:100%;
+    max-width:520px;
+    max-height:90vh;
+    overflow-y:auto;
+    padding:22px 24px;
+    box-shadow:0 20px 60px rgba(14,42,71,.25);
+  }
+  .modal h2{
+    font-size:17px;
+    margin:0 0 16px 0;
+    color:var(--navy);
+  }
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .form-grid .full{grid-column:1/-1;}
+  .form-field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+    font-weight:700;
+    margin-bottom:5px;
+  }
+  .form-field input, .form-field select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:13px;
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+  }
+  .form-field input:focus, .form-field select:focus{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+  }
+  .report-box{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    line-height:1.6;
+    white-space:pre-wrap;
+    background:#F8FAFC;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px;
+    max-height:60vh;
+    overflow-y:auto;
+    color:var(--text);
+  }
+  .charts-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .chart-card.wide{grid-column:1/-1;}
+  .chart-card{
+    background:#FBFCFE;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .chart-card h4{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+    font-weight:700;
+    margin:0 0 10px 0;
+  }
+  .chart-body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+  .chart-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 14px;
+    justify-content:center;
+    margin-top:10px;
+    font-size:11.5px;
+    color:var(--text-muted);
+  }
+  .chart-legend .legend-item{
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .chart-legend .legend-dot{
+    width:10px; height:10px;
+    border-radius:50%;
+    display:inline-block;
+  }
+  @media (max-width:640px){
+    .charts-grid{grid-template-columns:1fr;}
+  }
+  .modal-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:18px;
+    gap:10px;
+  }
+  .modal-actions .right{display:flex; gap:8px;}
+  .modal-actions button{
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--steel);
+  }
+  .modal-actions .save-btn{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
+  }
+  .modal-actions .save-btn:hover{background:var(--navy-2);}
+  .modal-actions .delete-btn{
+    color:var(--red);
+    border-color:var(--red-bg);
+    background:var(--red-bg);
+  }
+  .modal-actions .delete-btn:hover{background:#F6D4D4;}
+  .modal-actions .cancel-btn:hover{border-color:var(--steel);}
+
+  @media (max-width:900px){
+    .board{grid-template-columns:1fr;}
+    table{min-width:820px;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">LOD2 Task Cockpit</div>
+      <div class="header-sub" id="todayLine"></div>
+    </div>
+    <div class="stat-chips" id="statChips"></div>
+  </div>
+</div>
+
+<div class="radar-section">
+  <div class="radar-title">Deadline Radar &mdash; click a month to filter</div>
+  <div class="radar" id="radar"></div>
+</div>
+
+<div class="toolbar" style="flex-direction:column;gap:8px;align-items:stretch;">
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+    <input type="text" id="searchBox" placeholder="Search tasks, owners..." style="min-width:180px;">
+    <select id="filterTeam"></select>
+    <select id="filterPriority"></select>
+    <select id="filterStatus"></select>
+    <select id="filterRag"></select>
+    <select id="filterOwner"></select>
+    <label class="toggle-pill"><input type="checkbox" id="hideCompleted" checked> Hide completed</label>
+    <button class="btn" id="resetBtn">Reset</button>
+    <div class="view-toggle" style="margin-left:auto;">
+      <button id="btnTable" class="active">Table</button>
+      <button id="btnBoard">Board</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+    <button class="btn btn-primary" id="addBtn">+ Add task</button>
+    <button class="btn" id="quickBtn">+ Quick note</button>
+    <button class="btn" id="calBtn">Calendar</button>
+    <span style="width:1px;height:22px;background:var(--border);display:inline-block;margin:0 2px;"></span>
+    <button class="btn btn-primary" id="reportBtn">Weekly report</button>
+    <button class="btn btn-primary" id="fteBtn">FTE Report</button>
+    <button class="btn btn-primary" id="chartsBtn">Charts</button>
+    <span style="width:1px;height:22px;background:var(--border);display:inline-block;margin:0 2px;"></span>
+    <button class="btn" id="ganttBtn">Gantt</button>
+    <button class="btn" id="teamsBtn">Teams</button>
+    <button class="btn" id="csvBtn">Export CSV</button>
+    <button class="btn" id="rapBtn" style="background:var(--teal);color:#fff;border-color:var(--teal);">Risk Activity Plan</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="count-line" id="countLine"></div>
+
+  <div id="tableView" class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-key="task">Task</th>
+          <th data-key="team">Team</th>
+          <th data-key="priority">Priority</th>
+          <th data-key="status">Status</th>
+          <th data-key="rag">RAG</th>
+          <th data-key="owner">Owners</th>
+          <th data-key="startDate">Start</th>
+          <th data-key="effort">Est. (d)</th>
+          <th data-key="actual">Act. (d)</th>
+          <th data-key="due">Due date</th>
+          <th data-key="daysLeft">Days left</th>
+          <th class="nosort"></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div id="boardView" class="board hidden"></div>
+</div>
+
+<div class="footer-note">LOD2 Task Cockpit &mdash; v2.0 &mdash; <span id="lastSaved">All changes saved automatically in this browser.</span></div>
+
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <h2 id="modalTitle">Add task</h2>
+    <div class="form-grid">
+      <div class="form-field full">
+        <label>Task / Initiative</label>
+        <input type="text" id="f-task" placeholder="e.g. Liquidity Policy annual review">
+      </div>
+      <div class="form-field">
+        <label>Team</label>
+        <input type="text" id="f-team" list="teamList" placeholder="e.g. FRF">
+        <datalist id="teamList">
+          <option value="ROC"></option>
+          <option value="CR"></option>
+          <option value="DRR"></option>
+          <option value="FRF"></option>
+          <option value="ALL"></option>
+        </datalist>
+      </div>
+      <div class="form-field">
+        <label>Priority</label>
+        <select id="f-priority">
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="Not Started" selected>Not Started</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>RAG</label>
+        <select id="f-rag">
+          <option value="Green" selected>Green</option>
+          <option value="Amber">Amber</option>
+          <option value="Red">Red</option>
+        </select>
+      </div>
+      <div class="form-field full">
+        <label>Owners <span style="font-weight:400;color:var(--text-muted);">(type name + Enter to add)</span></label>
+        <div id="ownerTags" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;min-height:38px;cursor:text;background:#fff;" onclick="document.getElementById('ownerInput').focus()"></div>
+        <input type="text" id="ownerInput" placeholder="Add owner..." style="margin-top:6px;width:100%;box-sizing:border-box;">
+        <input type="hidden" id="f-owner">
+      </div>
+      <div class="form-field">
+        <label>Start date</label>
+        <input type="date" id="f-start">
+      </div>
+      <div class="form-field">
+        <label>Due date</label>
+        <input type="date" id="f-due">
+      </div>
+      <div class="form-field">
+        <label>Effort estimated (person-days)</label>
+        <input type="number" id="f-effort" min="0" step="0.5" placeholder="e.g. 3">
+      </div>
+      <div class="form-field" id="f-actual-group">
+        <label>Effort actual (person-days)</label>
+        <input type="number" id="f-actual" min="0" step="0.5" placeholder="fill when completed">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <div class="left">
+        <button class="delete-btn hidden" id="deleteBtn">Delete task</button>
+      </div>
+      <div class="right">
+        <button class="cancel-btn" id="cancelBtn">Cancel</button>
+        <button class="save-btn" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="reportOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:640px;">
+    <h2>Weekly status report &mdash; for the CRO</h2>
+    <div class="report-box" id="reportContent"></div>
+    <div class="modal-actions">
+      <div class="left"></div>
+      <div class="right">
+        <button class="cancel-btn" id="reportCloseBtn">Close</button>
+        <button class="btn" id="reportCopyBtn">Copy to clipboard</button>
+        <button class="save-btn" id="reportDownloadBtn">Download .txt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="chartsOverlay" class="modal-overlay hidden" style="padding:0;align-items:stretch;">
+  <div style="background:#fff;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:17px;font-weight:800;color:var(--navy);">Portfolio charts</span>
+      <button class="cancel-btn" id="chartsCloseBtn" style="padding:7px 16px;">Close</button>
+    </div>
+    <div class="charts-grid" id="chartsContent" style="flex:1;overflow:auto;padding:24px;"></div>
+  </div>
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+const MONTH_MAP = {gen:0, feb:1, mar:2, apr:3, mag:4, giu:5, lug:6, ago:7, set:8, ott:9, nov:10, dic:11};
+function parseItDate(str){
+  if(!str) return null;
+  const parts = str.trim().split(' ');
+  if(parts.length < 3) return null;
+  const day = parseInt(parts[0],10);
+  const month = MONTH_MAP[parts[1]];
+  const year = parseInt(parts[2],10);
+  if(month===undefined || isNaN(day) || isNaN(year)) return null;
+  return new Date(year, month, day);
+}
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toISO(date){
+  if(!date) return '';
+  return date.getFullYear()+'-'+pad2(date.getMonth()+1)+'-'+pad2(date.getDate());
+}
+function fromISO(iso){
+  if(!iso) return null;
+  const parts = iso.split('-').map(Number);
+  const y=parts[0], m=parts[1], d=parts[2];
+  if(!y||!m||!d) return null;
+  return new Date(y, m-1, d);
+}
+
+const RAW = [
+["Audit DMP - B-02 - Qualificative Price","DRR","High","Completed","Red","Pietro Villano","Tommaso Mingazzini","30 mar 2026"],
+["Audit DMP - B-03 - Timeline in DMP","DRR","High","Completed","Amber","Pietro Villano","Tommaso Mingazzini","30 mar 2026"],
+["Audit DMP - B-01 - Loss Allocation Rules","DRR","High","Completed","Amber","Tommaso Mingazzini","Pietro Villano","15 apr 2026"],
+["Challenge - Diary Der. Challenge","ROC","High","Completed","Green","Stefano Gabana","Ludovica Apostolico","30 apr 2026"],
+["Settlement Prices - First level controls","ROC","High","In Progress","Green","Tommaso Mingazzini","Ludovica Apostolico","15 giu 2026"],
+["Due Diligence 2026","CR","Medium","In Progress","Green","Benedetta Volonte","Luigi Barone","26 giu 2026"],
+["EICS Model Validation finding - PIT | Yields | Callable Bonds Consideration using OAS","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","30 giu 2026"],
+["Inspections - engage advisory firm","CR","Medium","In Progress","Green","Luigi Barone","Valentina Vano","30 giu 2026"],
+["June DMC (Selection Mandatory Brokers)","DRR","Medium","In Progress","Green","Tommaso Mingazzini","Giulio Santorelli","30 giu 2026"],
+["Liquidation Strategy: REPO","DRR","Medium","In Progress","Amber","Matteo Monti","Tommaso Mingazzini","30 giu 2026"],
+["ESMA Stress Test 2026 (Recovery part)","FRF","High","In Progress","Amber","Stefano Gabana","Pietro Villano","30 giu 2026"],
+["Define a Model Challenge Template per Liquidity / Collateral / Investment","FRF","Low","In Progress","Green","Giulio Santorelli","Manuel Sforza","30 giu 2026"],
+["Credit Facility","FRF","Medium","In Progress","Green","Manuel Sforza","Giulio Santorelli","30 giu 2026"],
+["Control - Define a control framework","ROC","Medium","In Progress","Amber","Manuel Sforza","Ludovica Apostolico","30 giu 2026"],
+["Board of Statutory Auditors - 8 July (Risk Journal)","ROC","Medium","Not Started","Green","Stefano Gabana","Ludovica Apostolico","30 giu 2026"],
+["Control - Define a list of controls/metrics to be implemented","ROC","Medium","In Progress","Amber","Giulia Poce","Ludovica Apostolico","30 giu 2026"],
+["Sponsor Access finding - Sponsor Member aggregate concentration risk monitoring","ROC","Low","Not Started","Green","Stefano Gabana","Ludovica Apostolico","30 lug 2026"],
+["Review Workday objectives","ALL","Medium","Not Started","Green","Pietro Villano","","31 lug 2026"],
+["Recovery Plan update","DRR","High","In Progress","Green","Francesco Gagliano","Stefano Gabana","31 lug 2026"],
+["Onboarding new Mandatory and Voluntary Participants","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","31 lug 2026"],
+["Challenge - Power Derivatives New Framework","ROC","High","Not Started","Amber","Giulia Poce","Pietro Villano","31 lug 2026"],
+["EICS Model Validation finding - TTC | Hedge Funds (HF) | Missing Escalation Triggers","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","30 set 2026"],
+["EICS Model Validation finding - TTC | Pension Funds (PF) | sovereign weight","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","30 set 2026"],
+["EICS Model Validation finding - TTC | GRE | model assessment","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","30 set 2026"],
+["Audit DMP - B-04 - Trading Restrictions in the Auction Process","DRR","Low","In Progress","Green","Tommaso Mingazzini","Matteo Monti","30 set 2026"],
+["Liquidity Policy annual review","FRF","High","Not Started","Amber","Giulio Santorelli","Manuel Sforza","30 set 2026"],
+["Investment Policy Review","FRF","Low","Not Started","Green","Manuel Sforza","Giulio Santorelli","30 set 2026"],
+["Inspection - pt. 4b Model Design Procedure enhancement","ROC","Low","In Progress","Green","Giulia Poce","Pietro Villano","30 set 2026"],
+["Inspection - pt. 4b Define challenge buffer to be included in model project plans","ROC","Low","In Progress","Green","Giulia Poce","Pietro Villano","30 set 2026"],
+["Inspection - pt. 4c Define LOD2 challenge report template","ROC","Low","Completed","Green","Stefano Gabana","Giulia Poce","30 set 2026"],
+["Inspection - pt. 4e Enhance Risk Committee reporting","ROC","Low","In Progress","Green","Giulia Poce","Pietro Villano","30 set 2026"],
+["Inspection - pt. 4f Margin / Notional monitoring","ROC","Low","In Progress","Green","Ludovica Apostolico","Giulia Poce","30 set 2026"],
+["Innovation - Position Concentration Monitoring","ROC","Low","In Progress","Green","Ludovica Apostolico","Pietro Villano","30 set 2026"],
+["IRC - Review Internal Risk Committee (leverage on Risk Journal)","ROC","Low","In Progress","Green","Ludovica Apostolico","Pietro Villano","30 set 2026"],
+["Inspection - pt. 4b Updated project planning template","ROC","Medium","In Progress","Green","Giulia Poce","Pietro Villano","30 set 2026"],
+["2026 Default Fire Drill action plan","DRR","High","In Progress","Amber","Tommaso Mingazzini","Matteo Monti","31 ott 2026"],
+["Collateral Policy enhancement (collateral 100% FI, Greek shares)","FRF","High","In Progress","Green","Giulio Santorelli","Manuel Sforza","31 ott 2026"],
+["Audit DMP - B-05 - Default Management of two or more Clearing Members","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 nov 2026"],
+["Audit DMP - B-06 - Liquidity and Concentration scores","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 nov 2026"],
+["Audit DMP - B-07 - Management of unsuccessful auctions","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 nov 2026"],
+["Audit DMP - B-08 - Juniorization process documentation","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 nov 2026"],
+["Audit DMP - B-09 - Auction Capacity Benchmark","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 nov 2026"],
+["Inspection - pt. 4f Watchlist addon","CR","Low","In Progress","Green","Valentina Vano","Luigi Barone","31 dic 2026"],
+["Inspection - pt 8b Inspections","CR","Low","In Progress","Green","Valentina Vano","Luigi Barone","31 dic 2026"],
+["Inspection - pt 8c Qualitative methodology (incl. pt. 7c - sellout)","CR","Low","In Progress","Green","Benedetta Volonte","Luigi Barone","31 dic 2026"],
+["TARS","CR","Low","In Progress","Green","Luigi Barone","","31 dic 2026"],
+["EICS Model Validation finding - PIT | Combination Rule | Heterogeneous Signal Quality","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","31 dic 2026"],
+["EICS Model Validation finding - PIT | Data Cleansing and Quote Selection Framework","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","31 dic 2026"],
+["Fixed Income Derivatives (From HP5 to HP2 and CL99%)","ROC","Low","In Progress","Green","Giulia Poce","Pietro Villano","31 dic 2026"],
+["Innovation - Define LOD2 Dashboard","ROC","Medium","In Progress","Green","Matteo Monti","Ludovica Apostolico","31 dic 2026"],
+["Instrument back Test (Risk assessment Finding)","ROC","Medium","Not Started","Green","Giulia Poce","Ludovica Apostolico","31 dic 2026"],
+["APC Policy (Risk assessment Finding)","ROC","Medium","Not Started","Green","Giulia Poce","Ludovica Apostolico","31 dic 2026"],
+["Settlement Prices - Second level controls","ROC","Low","Not Started","Green","Ludovica Apostolico","Giulia Poce","31 dic 2026"],
+["Inspection - pt 8a EICS reassessment","CR","Low","Not Started","Green","Luigi Barone","Benedetta Volonte","31 mar 2027"],
+["Risk Journal - 100% automation","ROC","Medium","In Progress","Green","Stefano Gabana","Ludovica Apostolico","31 mar 2027"],
+["Sponsor Access finding - Internal Credit Scoring (Bankit) - Link with inspection","CR","Low","Not Started","Green","Luigi Barone","Benedetta Volonte","30 apr 2027"],
+["Sponsor Access finding - min financial resources required / dynamic ratio (ESMA)","CR","Medium","Not Started","Green","Luigi Barone","Valentina Vano","30 apr 2027"],
+["Sponsor Access finding - Multi Default Scenario (Bankit) + valutation of ORA buffer","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 apr 2027"],
+["Sponsor Access finding - liquidity stress test review (ESMA)","FRF","Low","Not Started","Green","Manuel Sforza","Giulio Santorelli","30 apr 2027"],
+["Sponsor Access finding - Multi Default Scenario (Bankit) + liquidity stress test","FRF","Low","Not Started","Green","Manuel Sforza","Giulio Santorelli","30 apr 2027"],
+["Greek shares - issuer level creditworthiness","CR","Low","Not Started","Green","Luigi Barone","Valentina Vano","30 giu 2027"],
+["Sponsor Access finding - Loss allocation sequence (Bankit)","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti","30 giu 2027"],
+["Inspection - pt. 4e LOD2 Risk Control Hub (Enhance BT, ST, RST, APC analysis)","ROC","High","In Progress","Amber","Giulia Poce","Manuel Sforza","30 giu 2027"],
+["Black Sea commodities / Impact on Default Procedure","DRR","Low","Not Started","Green","Tommaso Mingazzini","Matteo Monti"," "],
+["Black Sea commodities / Challenge","ROC","Low","Not Started","Green","Stefano Gabana","Ludovica Apostolico"," "]
+];
+
+const NOW = new Date();
+const TODAY = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+
+function buildDefaultTasks(){
+  return RAW.map((r,i)=>({
+    id: 'T'+String(i+1).padStart(2,'0'),
+    task: r[0],
+    team: r[1],
+    priority: r[2],
+    status: r[3],
+    rag: r[4],
+    owner: r[5] || '',
+    backup: r[6] || '',
+    dueISO: toISO(parseItDate(r[7].trim())),
+    startISO: '',
+    owners: [],
+    effort: 1,
+    actual: null,
+    log: [],
+    completedAt: r[3]==='Completed' ? toISO(TODAY) : ''
+  }));
+}
+
+let tasks = [];
+
+/* ===================== PERSISTENCE ===================== */
+const STORAGE_KEY = 'lod2-task-data';
+const DATA_VERSION = 2;
+// Task names from the previous (v1) default list, used only to identify
+// genuinely user-added custom tasks during migration.
+const PREVIOUS_TASK_NAMES = new Set([
+  "Challenge - Diary Der. Challenge","Due Diligence 2026","Inspections - engage advisory firm",
+  "June DMC (Selection Mandatory Brokers, Liquidation Strategy Repo)","Liquidation Strategy: REPO",
+  "ESMA Stress Test 2026 (Recovery part)","Define a Model Challenge Template per Liquidity / Collateral / Investment",
+  "Credit Facility","Control - Define a control framework","Board of Statutory Auditors - 8 July",
+  "Review Workday objectives","Recovery Plan update","Onboarding new Mandatory and Voluntary Participants",
+  "Challenge - Power Derivatives New Framework","MV findings 1st round (due 30/09)","MV findings 2nd round (due 31/12)",
+  "Default Audit Findings","Liquidity Policy annual review","Investment Policy Review",
+  "Inspection - pt. 4b Model Design Procedure enhancement","Inspection - pt. 4b Define challenge buffer to be included in model project plans",
+  "Inspection - pt. 4c Define LOD2 challenge report template","Inspection - pt. 4e Enhance Risk Committee reporting",
+  "Inspection - pt. 4f Margin / Notional monitoring","Innovation - Position Concentration Monitoring",
+  "IRC - Review Internal Risk Committee (leverage on Risk Journal)","Inspection - pt. 4b Updated project planning template",
+  "2026 Default Fire Drill action plan","Collateral Policy enhancement (collateral 100% FI, Greek shares)",
+  "Inspection - pt. 4f Watchlist addon","Inspection - pt 8b Inspections","Inspection - pt 8c Qualitative methodology (incl. pt. 7c - sellout)",
+  "TARS","Fixed Income Derivatives (From HP5 to HP2 and CL99%)","Innovation - Define LOD2 Dashboard",
+  "Inspection - pt 8a EICS reassessment","Greek shares - issuer level creditworthiness",
+  "Inspection - pt. 4e LOD2 Risk Control Hub (Enhance BT, ST, RST, APC analysis)",
+  "Black Sea commodities / Impact on Default Procedure","Black Sea commodities / Challenge"
+]);
+
+async function loadTasks(){
+  let stored = null;
+  try{
+    const res = window.storage ? await window.storage.get(STORAGE_KEY) : {value: localStorage.getItem(STORAGE_KEY)};
+    if(res && res.value) stored = JSON.parse(res.value);
+  }catch(e){ /* key not found or error -> fall back below */ }
+
+  if(stored && stored.version === DATA_VERSION && Array.isArray(stored.tasks)){
+    tasks = stored.tasks;
+    return;
+  }
+
+  const fresh = buildDefaultTasks();
+
+  if(stored){
+    // Migration from an earlier data version: keep status/RAG/completion
+    // edits for tasks that still exist, and preserve any tasks the user
+    // added manually that are not part of either default list.
+    const oldTasks = Array.isArray(stored) ? stored : (stored.tasks || []);
+    const byName = {};
+    oldTasks.forEach(t=>{ byName[t.task] = t; });
+
+    const freshNames = new Set(fresh.map(t=>t.task));
+
+    tasks = fresh.map(t=>{
+      const old = byName[t.task];
+      if(old){
+        return Object.assign({}, t, {
+          status: old.status,
+          rag: old.rag,
+          owner: old.owner,
+          backup: old.backup,
+          dueISO: old.dueISO,
+          effort: old.effort != null ? old.effort : 1,
+          startISO: old.startISO || '',
+          owners: old.owners || (old.owner ? [old.owner] : []),
+          actual: old.actual != null ? old.actual : null,
+          log: old.log || [],
+          completedAt: old.completedAt || t.completedAt
+        });
+      }
+      return t;
+    });
+
+    const customTasks = oldTasks.filter(t=> !PREVIOUS_TASK_NAMES.has(t.task) && !freshNames.has(t.task));
+    customTasks.forEach(t=>{ t.id = nextId(); tasks.push(t); });
+  } else {
+    tasks = fresh;
+  }
+
+  await saveTasks();
+}
+async function saveTasks(){
+  try{ const ts=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); const el=document.getElementById('lastSaved'); if(el) el.textContent='Last saved at '+ts+'.'; }catch(e){}
+  try{
+    if(window.storage){ await window.storage.set(STORAGE_KEY, JSON.stringify({version: DATA_VERSION, tasks: tasks})); } else { localStorage.setItem(STORAGE_KEY, JSON.stringify({version: DATA_VERSION, tasks: tasks})); }
+  }catch(e){ console.error('Storage error', e); }
+}
+
+/* ===================== HELPERS ===================== */
+const TEAM_COLORS = {
+  ROC:'#2D6E8E', CR:'#7C5C9E', DRR:'#B5651D', FRF:'#2E5C8A', ALL:'#6B7785'
+};
+function dueDateOf(t){ return fromISO(t.dueISO); }
+function daysLeft(t){
+  const d = dueDateOf(t);
+  if(!d) return null;
+  return Math.round((d - TODAY)/86400000);
+}
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(t){
+  const d = dueDateOf(t);
+  if(!d) return 'TBD';
+  return d.getDate()+' '+MONTHS_EN[d.getMonth()]+' '+d.getFullYear();
+}
+function daysClass(dl){
+  if(dl===null) return 'days-ok';
+  if(dl<0) return 'days-overdue';
+  if(dl<=14) return 'days-soon';
+  return 'days-ok';
+}
+function daysLabel(dl){
+  if(dl===null) return '\u2014';
+  if(dl<0) return Math.abs(dl)+'d ago';
+  if(dl===0) return 'today';
+  return dl+'d';
+}
+function teamColor(team){
+  return TEAM_COLORS[team] || '#6B7785';
+}
+
+/* ===================== STATE ===================== */
+let state = {
+  search:'', team:'all', priority:'all', status:'all', rag:'all', owner:'all',
+  hideCompleted:true,
+  view:'table',
+  sortKey:'due', sortAsc:true,
+  radarMonth:'all',
+  editingId:null
+};
+
+/* ===================== FILTER OPTIONS ===================== */
+function uniqueValues(key){
+  return [...new Set(tasks.map(t=>t[key]).filter(v=>v && v.trim()!==''))].sort();
+}
+function populateFilters(){
+  const teamSel = document.getElementById('filterTeam');
+  const prioSel = document.getElementById('filterPriority');
+  const statSel = document.getElementById('filterStatus');
+  const ragSel = document.getElementById('filterRag');
+  const ownSel = document.getElementById('filterOwner');
+
+  const prevTeam = teamSel.value, prevPrio = prioSel.value, prevStat = statSel.value,
+        prevRag = ragSel.value, prevOwn = ownSel.value;
+
+  teamSel.innerHTML = '<option value="all">All teams</option>' +
+    uniqueValues('team').map(v=>`<option value="${v}">${v}</option>`).join('');
+
+  const prioOrder = ['Critical','High','Medium','Low'];
+  prioSel.innerHTML = '<option value="all">All priorities</option>' +
+    prioOrder.filter(p=>tasks.some(t=>t.priority===p)).map(v=>`<option value="${v}">${v}</option>`).join('');
+
+  const statOrder = ['Not Started','In Progress','Completed'];
+  statSel.innerHTML = '<option value="all">All statuses</option>' +
+    statOrder.map(v=>`<option value="${v}">${v}</option>`).join('');
+
+  const ragOrder = ['Green','Amber','Red'];
+  ragSel.innerHTML = '<option value="all">All RAG</option>' +
+    ragOrder.filter(r=>tasks.some(t=>t.rag===r)).map(v=>`<option value="${v}">${v}</option>`).join('');
+
+  ownSel.innerHTML = '<option value="all">All owners</option>' +
+    uniqueValues('owner').map(v=>`<option value="${v}">${v}</option>`).join('');
+
+  [['team',teamSel,prevTeam],['priority',prioSel,prevPrio],['status',statSel,prevStat],
+   ['rag',ragSel,prevRag],['owner',ownSel,prevOwn]].forEach(item=>{
+    const key=item[0], sel=item[1], prev=item[2];
+    let found=false;
+    for(let i=0;i<sel.options.length;i++){ if(sel.options[i].value===prev){found=true;break;} }
+    if(prev && found){ sel.value = prev; }
+    else { sel.value='all'; state[key]='all'; }
+  });
+}
+
+/* ===================== RADAR ===================== */
+function monthKey(d){
+  if(!d) return 'TBD';
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1);
+}
+function monthLabel(key){
+  if(key==='TBD') return 'Unscheduled';
+  const parts = key.split('-');
+  return MONTHS_EN[parseInt(parts[1],10)-1]+' '+parts[0];
+}
+function renderRadar(){
+  const radar = document.getElementById('radar');
+  const thisMonthKey = TODAY.getFullYear()+'-'+pad2(TODAY.getMonth()+1);
+
+  // separate completed from open/future
+  const completedTasks = tasks.filter(t=>t.status==='Completed');
+  const openTasks      = tasks.filter(t=>t.status!=='Completed');
+
+  // build groups only for open tasks, only current month onwards
+  const groups = {};
+  openTasks.forEach(t=>{
+    const k = monthKey(dueDateOf(t));
+    if(k!=='TBD' && k < thisMonthKey) return; // skip past months
+    if(!groups[k]) groups[k] = {Green:0, Amber:0, Red:0, total:0};
+    groups[k][t.rag] = (groups[k][t.rag]||0) + 1;
+    groups[k].total++;
+  });
+  let keys = Object.keys(groups).filter(k=>k!=='TBD').sort();
+  if(groups['TBD']) keys.push('TBD');
+
+  // "All" chip counts only open tasks
+  const allChip = `<div class="radar-month ${state.radarMonth==='all'?'active':''}" data-month="all">
+      <div class="rm-label">All open</div>
+      <div class="rm-count">${openTasks.length} tasks</div>
+      <div class="radar-bar"><span style="width:100%;background:var(--teal)"></span></div>
+    </div>`;
+
+  // "Completed" macro-block
+  const compChip = completedTasks.length ? `<div class="radar-month ${state.radarMonth==='__completed__'?'active':''}" data-month="__completed__" style="border-color:var(--green);opacity:0.8;">
+      <div class="rm-label" style="color:var(--green);">Completed</div>
+      <div class="rm-count">${completedTasks.length} tasks</div>
+      <div class="radar-bar"><span style="width:100%;background:var(--green)"></span></div>
+    </div>` : '';
+
+  radar.innerHTML = allChip + compChip +
+    keys.map(k=>{
+      const g = groups[k];
+      const gp = g.Green/g.total*100, ap=g.Amber/g.total*100, rp=g.Red/g.total*100;
+      return `<div class="radar-month ${state.radarMonth===k?'active':''}" data-month="${k}">
+        <div class="rm-label">${monthLabel(k)}</div>
+        <div class="rm-count">${g.total} tasks</div>
+        <div class="radar-bar">
+          ${g.Green?`<span style="width:${gp}%;background:var(--green)"></span>`:''}
+          ${g.Amber?`<span style="width:${ap}%;background:var(--amber)"></span>`:''}
+          ${g.Red?`<span style="width:${rp}%;background:var(--red)"></span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+  radar.querySelectorAll('.radar-month').forEach(el=>{
+    el.addEventListener('click',()=>{
+      state.radarMonth = el.dataset.month;
+      render();
+    });
+  });
+}
+
+/* ===================== STAT CHIPS ===================== */
+function renderStats(){
+  const open = tasks.filter(t=>t.status!=='Completed');
+  const overdue = open.filter(t=>{const dl=daysLeft(t); return dl!==null && dl<0;});
+  const soon = open.filter(t=>{const dl=daysLeft(t); return dl!==null && dl>=0 && dl<=14;});
+  const criticalHigh = open.filter(t=>t.priority==='Critical'||t.priority==='High');
+  const amberRed = open.filter(t=>t.rag==='Amber'||t.rag==='Red');
+  const completed = tasks.filter(t=>t.status==='Completed');
+  const pct = tasks.length ? Math.round(completed.length/tasks.length*100) : 0;
+  const fteOpen = (open.reduce((s,t)=>s+(t.effort||0),0)/220).toFixed(2);
+
+  const chips = [
+    {label:'Open tasks',     value: open.length,           cls:''},
+    {label:'Overdue',        value: overdue.length,        cls: overdue.length>0?'red':'green'},
+    {label:'Due in 14d',     value: soon.length,           cls: soon.length>0?'amber':''},
+    {label:'High / Critical',value: criticalHigh.length,   cls: criticalHigh.length>0?'amber':''},
+    {label:'Amber / Red',    value: amberRed.length,       cls: amberRed.length>0?'amber':''},
+    {label:'Completed',      value: completed.length,       cls:'green'},
+    {label:'% Done',         value: pct+'%',               cls: pct>=75?'green':pct>=40?'amber':''},
+    {label:'FTE open',       value: fteOpen,               cls:''},
+  ];
+  document.getElementById('statChips').innerHTML = chips.map(c=>
+    `<div class="chip ${c.cls}"><div class="chip-num">${c.value}</div><div class="chip-label">${c.label}</div></div>`
+  ).join('');
+}
+
+/* ===================== FILTERING & SORTING ===================== */
+function getFiltered(){
+  let list = tasks.filter(t=>{
+    if(state.hideCompleted && t.status==='Completed') return false;
+    if(state.team!=='all' && t.team!==state.team) return false;
+    if(state.priority!=='all' && t.priority!==state.priority) return false;
+    if(state.status!=='all' && t.status!==state.status) return false;
+    if(state.rag!=='all' && t.rag!==state.rag) return false;
+    if(state.owner!=='all' && t.owner!==state.owner) return false;
+    if(state.radarMonth==='__completed__'){
+      if(t.status!=='Completed') return false;
+    } else if(state.radarMonth!=='all'){
+      if(monthKey(dueDateOf(t))!==state.radarMonth) return false;
+    }
+    if(state.search){
+      const s = state.search.toLowerCase();
+      const ownersStr=(t.owners||[]).join(' ');
+      const hay = (t.task+' '+t.owner+' '+ownersStr+' '+t.team).toLowerCase();
+      if(!hay.includes(s)) return false;
+    }
+    return true;
+  });
+
+  const key = state.sortKey;
+  const asc = state.sortAsc ? 1 : -1;
+  const prioRank = {Critical:0, High:1, Medium:2, Low:3};
+  const statRank = {'Not Started':0,'In Progress':1,'Completed':2};
+  const ragRank = {Red:0, Amber:1, Green:2};
+
+  list.sort((a,b)=>{
+    let av, bv;
+    if(key==='due'){
+      const ad=dueDateOf(a), bd=dueDateOf(b);
+      av = ad ? ad.getTime() : Infinity;
+      bv = bd ? bd.getTime() : Infinity;
+    } else if(key==='daysLeft'){
+      const dlA = daysLeft(a), dlB = daysLeft(b);
+      av = dlA===null ? Infinity : dlA;
+      bv = dlB===null ? Infinity : dlB;
+    } else if(key==='priority'){
+      av = prioRank[a.priority]; bv = prioRank[b.priority];
+    } else if(key==='status'){
+      av = statRank[a.status]; bv = statRank[b.status];
+    } else if(key==='rag'){
+      av = ragRank[a.rag]; bv = ragRank[b.rag];
+    } else {
+      av = (a[key]||'').toString().toLowerCase();
+      bv = (b[key]||'').toString().toLowerCase();
+    }
+    if(av<bv) return -1*asc;
+    if(av>bv) return 1*asc;
+    return 0;
+  });
+  return list;
+}
+
+/* ===================== RENDER TABLE ===================== */
+function renderTable(list){
+  const tbody = document.getElementById('tableBody');
+  if(list.length===0){
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--text-muted);">No tasks match the selected filters.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(t=>{
+    const dl = daysLeft(t);
+    return `<tr data-id="${t.id}">
+      <td class="task-name" title="${escapeHtml(t.task)}">${escapeHtml(t.task)}</td>
+      <td><span class="badge team-badge" style="background:${teamColor(t.team)}">${escapeHtml(t.team)}</span></td>
+      <td><span class="badge prio-${t.priority}">${t.priority}</span></td>
+      <td>
+        <select class="cell-edit status-edit" data-id="${t.id}">
+          ${['Not Started','In Progress','Completed'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select class="cell-edit rag-edit" data-id="${t.id}">
+          ${['Green','Amber','Red'].map(r=>`<option value="${r}" ${t.rag===r?'selected':''}>${'\u25CF'} ${r}</option>`).join('')}
+        </select>
+      </td>
+      <td>${(t.owners||[t.owner]).filter(Boolean).join(', ')||'\u2014'}</td>
+      <td style="font-size:11px;color:var(--steel);">${t.startISO?fmtDateISO(t.startISO):'\u2014'}</td>
+      <td class="due-date">${t.effort||0}d</td>
+      <td class="due-date" style="color:${t.actual!=null?(t.actual>t.effort?'var(--red)':t.actual<t.effort?'var(--green)':''):'var(--text-muted)'};">${t.actual!=null?t.actual+'d':'-'}</td>
+      <td class="due-date">${fmtDate(t)}</td>
+      <td class="days-left ${daysClass(dl)}">${daysLabel(dl)}</td>
+      <td style="white-space:nowrap;"><button class="edit-btn" data-id="${t.id}">Edit</button> <button class="log-btn" data-id="${t.id}" style="background:${t.log&&t.log.length>0?'var(--teal)':'#f0f4f8'};color:${t.log&&t.log.length>0?'#fff':'var(--steel)'};border:1px solid ${t.log&&t.log.length>0?'var(--teal)':'var(--border)'};border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;" title="${t.log&&t.log.length>0?t.log.length+' log entr'+(t.log.length===1?'y':'ies'):'No log entries yet'}">${t.log&&t.log.length>0?'Log ('+t.log.length+')':'Log'}</button></td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('.status-edit').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const id = e.target.dataset.id;
+      const t = tasks.find(x=>x.id===id);
+      const wasCompleted = t.status==='Completed';
+      t.status = e.target.value;
+      if(t.status==='Completed' && !wasCompleted){ t.completedAt = toISO(TODAY); }
+      if(t.status!=='Completed'){ t.completedAt = ''; }
+      saveTasks();
+      render();
+    });
+  });
+  tbody.querySelectorAll('.rag-edit').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const id = e.target.dataset.id;
+      const t = tasks.find(x=>x.id===id);
+      t.rag = e.target.value;
+      saveTasks();
+      render();
+    });
+  });
+  tbody.querySelectorAll('.edit-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      openModal(e.target.dataset.id);
+    });
+  });
+
+  tbody.querySelectorAll('.rag-edit').forEach(sel=>{
+    const id = sel.dataset.id;
+    const t = tasks.find(x=>x.id===id);
+    sel.style.color = t.rag==='Green'?'var(--green)':t.rag==='Amber'?'var(--amber)':'var(--red)';
+    sel.style.fontWeight='600';
+  });
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ===================== RENDER BOARD ===================== */
+function renderBoard(list){
+  const cols = [
+    {key:'Not Started', label:'Not started'},
+    {key:'In Progress', label:'In progress'},
+    {key:'Completed', label:'Completed'}
+  ];
+  const board = document.getElementById('boardView');
+  board.innerHTML = cols.map(col=>{
+    const items = list.filter(t=>t.status===col.key);
+    return `<div class="board-col">
+      <h3>${col.label} <span class="count">${items.length}</span></h3>
+      ${items.map(t=>{
+        const dl = daysLeft(t);
+        return `<div class="board-card rag-border-${t.rag}" data-id="${t.id}">
+          <div class="bc-title">${escapeHtml(t.task)}</div>
+          <div class="bc-meta">
+            <span class="badge team-badge" style="background:${teamColor(t.team)}">${escapeHtml(t.team)}</span>
+            <span class="badge prio-${t.priority}">${t.priority}</span>
+          </div>
+          <div class="bc-foot">
+            <span>${((t.owners&&t.owners.length)?t.owners.join(', '):t.owner)||'\u2014'}</span>
+            <span class="${daysClass(dl)}">${fmtDate(t)} \u00b7 ${daysLabel(dl)}</span>
+          </div>
+        </div>`;
+      }).join('') || `<div style="color:var(--text-muted); font-size:12px; padding:8px;">Empty</div>`}
+    </div>`;
+  }).join('');
+
+  board.querySelectorAll('.board-card').forEach(card=>{
+    card.addEventListener('click', ()=> openModal(card.dataset.id));
+  });
+}
+
+/* ===================== MAIN RENDER ===================== */
+function render(){
+  renderStats();
+  renderRadar();
+
+  const list = getFiltered();
+  document.getElementById('countLine').textContent = `${list.length} of ${tasks.length} tasks shown`;
+
+  if(state.view==='table'){
+    document.getElementById('tableView').classList.remove('hidden');
+    document.getElementById('boardView').classList.add('hidden');
+    renderTable(list);
+  } else {
+    document.getElementById('tableView').classList.add('hidden');
+    document.getElementById('boardView').classList.remove('hidden');
+    renderBoard(list);
+  }
+
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.classList.remove('sorted','asc');
+    if(th.dataset.key===state.sortKey){
+      th.classList.add('sorted');
+      if(state.sortAsc) th.classList.add('asc');
+    }
+  });
+}
+
+/* ===================== MODAL (ADD / EDIT) ===================== */
+function fmtDateISO(iso){
+  if(!iso) return 'n/a';
+  const d = fromISO(iso);
+  if(!d) return 'n/a';
+  return d.getDate()+' '+MONTHS_EN[d.getMonth()]+' '+d.getFullYear();
+}
+function openModal(id){
+  state.editingId = id || null;
+  const overlay = document.getElementById('modalOverlay');
+  const deleteBtn = document.getElementById('deleteBtn');
+
+  if(id){
+    const t = tasks.find(x=>x.id===id);
+    document.getElementById('modalTitle').textContent = 'Edit task';
+    document.getElementById('f-task').value = t.task;
+    document.getElementById('f-team').value = t.team;
+    document.getElementById('f-priority').value = t.priority;
+    document.getElementById('f-status').value = t.status;
+    document.getElementById('f-rag').value = t.rag;
+    document.getElementById('f-start').value = t.startISO||'';
+    document.getElementById('f-due').value = t.dueISO;
+    document.getElementById('f-effort').value = t.effort != null ? t.effort : 1;
+    currentOwners = (t.owners && t.owners.length) ? t.owners.slice() : (t.owner ? [t.owner] : []);
+    renderOwnerTags();
+    document.getElementById('f-actual').value = t.actual != null ? t.actual : '';
+    deleteBtn.classList.remove('hidden');
+  } else {
+    document.getElementById('modalTitle').textContent = 'Add task';
+    document.getElementById('f-task').value = '';
+    document.getElementById('f-team').value = '';
+    document.getElementById('f-priority').value = 'Medium';
+    document.getElementById('f-status').value = 'Not Started';
+    document.getElementById('f-rag').value = 'Green';
+    document.getElementById('f-start').value = '';
+    document.getElementById('f-due').value = '';
+    document.getElementById('f-effort').value = 1;
+    currentOwners = [];
+    renderOwnerTags();
+    document.getElementById('f-actual').value = '';
+    deleteBtn.classList.add('hidden');
+  }
+  overlay.classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.add('hidden');
+  state.editingId = null;
+}
+function nextId(){
+  let max = 0;
+  tasks.forEach(t=>{
+    const n = parseInt((t.id||'T0').replace('T',''),10);
+    if(!isNaN(n) && n>max) max=n;
+  });
+  return 'T'+String(max+1).padStart(2,'0');
+}
+async function saveTaskFromForm(){
+  const taskName = document.getElementById('f-task').value.trim();
+  if(!taskName){
+    document.getElementById('f-task').focus();
+    return;
+  }
+  const data = {
+    task: taskName,
+    team: document.getElementById('f-team').value.trim() || '\u2014',
+    priority: document.getElementById('f-priority').value,
+    status: document.getElementById('f-status').value,
+    rag: document.getElementById('f-rag').value,
+    owner: currentOwners.join(', '),
+    startISO: document.getElementById('f-start').value,
+    dueISO: document.getElementById('f-due').value,
+    owners: currentOwners.slice(),
+    effort: parseFloat(document.getElementById('f-effort').value) || 1,
+    actual: document.getElementById('f-actual').value !== '' ? parseFloat(document.getElementById('f-actual').value) : null
+  };
+  if(state.editingId){
+    const t = tasks.find(x=>x.id===state.editingId);
+    const wasCompleted = t.status==='Completed';
+    Object.assign(t, data);
+    if(t.status==='Completed' && !wasCompleted){ t.completedAt = toISO(TODAY); }
+    if(t.status!=='Completed'){ t.completedAt = ''; }
+  } else {
+    const newTask = {id: nextId(), completedAt:''};
+    Object.assign(newTask, data);
+    if(newTask.status==='Completed'){ newTask.completedAt = toISO(TODAY); }
+    tasks.push(newTask);
+  }
+  await saveTasks();
+  closeModal();
+  populateFilters();
+  render();
+}
+async function deleteTask(){
+  if(!state.editingId) return;
+  if(!confirm('Delete this task? This cannot be undone.')) return;
+  tasks = tasks.filter(t=>t.id!==state.editingId);
+  await saveTasks();
+  closeModal();
+  populateFilters();
+  render();
+}
+
+/* ===================== WEEKLY REPORT ===================== */
+function buildReportText(){
+  const todayStr = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  const WD = 220;
+  const open       = tasks.filter(t=>t.status!=='Completed');
+  const inProg     = open.filter(t=>t.status==='In Progress');
+  const notSt      = open.filter(t=>t.status==='Not Started');
+  const completed  = tasks.filter(t=>t.status==='Completed');
+  const overdue    = open.filter(t=>{const dl=daysLeft(t); return dl!==null && dl<0;});
+  const dueSoon    = open.filter(t=>{const dl=daysLeft(t); return dl!==null && dl>=0 && dl<=7;});
+  const critHigh   = open.filter(t=>t.priority==='Critical'||t.priority==='High');
+  const amberRed   = open.filter(t=>t.rag==='Amber'||t.rag==='Red');
+  const oEff       = open.reduce((s,t)=>s+(t.effort||0),0);
+  const pct        = tasks.length?Math.round(completed.length/tasks.length*100):0;
+
+  const byDue=(a,b)=>{const ad=dueDateOf(a),bd=dueDateOf(b); return (ad?ad.getTime():Infinity)-(bd?bd.getTime():Infinity);};
+  [overdue,dueSoon,critHigh,amberRed].forEach(a=>a.sort(byDue));
+
+  // deduplicate sections
+  const ovdIds=new Set(overdue.map(t=>t.id));
+  const soonF=dueSoon.filter(t=>!ovdIds.has(t.id));
+  const soonIds=new Set(soonF.map(t=>t.id));
+  const crHiF=critHigh.filter(t=>!ovdIds.has(t.id)&&!soonIds.has(t.id));
+  const crIds=new Set(crHiF.map(t=>t.id));
+  const amReF=amberRed.filter(t=>!ovdIds.has(t.id)&&!soonIds.has(t.id)&&!crIds.has(t.id));
+
+  const ln=(t)=>{
+    const dl=daysLeft(t);
+    const owners=(t.owners&&t.owners.length)?t.owners.join(', '):(t.owner||'n/a');
+    const e=(t.effort&&t.effort>0)?' | Est: '+t.effort+'d':'';
+    return '  - '+t.task+'\n    ['+t.team+'] Owner: '+owners+' | Due: '+fmtDate(t)+(dl!==null?' ('+daysLabel(dl)+')':'')+' | RAG: '+t.rag+e;
+  };
+  const sec=(title,list)=>{
+    let o=title+'\n';
+    o+=list.length?list.map(ln).join('\n\n')+'\n':'  None.\n';
+    return o+'\n';
+  };
+
+  let out='';
+  out+='================================================================\n';
+  out+='LOD2 - WEEKLY STATUS REPORT\n';
+  out+='Head of Financial and Credit Risk (LOD2)\n';
+  out+='Date: '+todayStr+'\n';
+  out+='================================================================\n\n';
+
+  // Executive summary - one paragraph
+  out+='EXECUTIVE SUMMARY\n';
+  out+='LOD2 is tracking '+open.length+' open items ('+inProg.length+' in progress, '+notSt.length+' not started), ';
+  out+=pct+'% of the total portfolio completed. ';
+  if(overdue.length>0) out+=overdue.length+' item'+(overdue.length>1?'s are':' is')+' overdue and require'+(overdue.length===1?'s':'')+' immediate attention. ';
+  else out+='No items are overdue. ';
+  if(amberRed.length>0) out+=amberRed.length+' item'+(amberRed.length>1?'s carry':' carries')+' Amber or Red RAG status.';
+  else out+='All open items are on track (Green RAG).';
+  out+='\n\n';
+
+  // Numbers at a glance
+  out+='AT A GLANCE\n';
+  out+='  Open:              '+open.length+'\n';
+  out+='  In Progress:       '+inProg.length+'\n';
+  out+='  Not Started:       '+notSt.length+'\n';
+  out+='  Completed:         '+completed.length+' ('+pct+'%)\n';
+  out+='  Overdue:           '+overdue.length+'\n';
+  out+='  Due within 7 days: '+dueSoon.length+'\n';
+  out+='  High / Critical:   '+critHigh.length+'\n';
+  out+='  Amber / Red RAG:   '+amberRed.length+'\n';
+  if(oEff>0) out+='  Remaining effort:  '+oEff.toFixed(1)+'d -> '+(oEff/WD).toFixed(2)+' FTE\n';
+  out+='\n';
+
+  if(overdue.length>0)  out+=sec('ACTION REQUIRED - OVERDUE ('+overdue.length+')', overdue);
+  if(soonF.length>0)    out+=sec('DUE WITHIN 7 DAYS ('+soonF.length+')', soonF);
+  if(crHiF.length>0)    out+=sec('HIGH / CRITICAL PRIORITY ('+crHiF.length+')', crHiF);
+  if(amReF.length>0)    out+=sec('AMBER / RED RAG ('+amReF.length+')', amReF);
+  if(!overdue.length&&!soonF.length&&!crHiF.length&&!amReF.length)
+    out+='No items require escalation this week.\n\n';
+
+  // Work delivered
+  const donePrevWeek = completed.filter(t=>{
+    if(!t.completedAt) return false;
+    const cd=fromISO(t.completedAt); if(!cd) return false;
+    return Math.round((TODAY-cd)/86400000)<=14;
+  });
+  if(donePrevWeek.length){
+    out+='RECENTLY COMPLETED (last 14 days)\n';
+    const byTeam={};
+    donePrevWeek.forEach(t=>{ if(!byTeam[t.team]) byTeam[t.team]=[]; byTeam[t.team].push(t); });
+    Object.keys(byTeam).sort().forEach(tm=>{
+      out+='  '+tm+':\n';
+      byTeam[tm].forEach(t=>{
+        const owners=(t.owners&&t.owners.length)?t.owners.join(', '):(t.owner||'');
+        const e=(t.actual!=null)?' [actual: '+t.actual+'d]':(t.effort?' [est: '+t.effort+'d]':'');
+        out+='    - '+t.task+(owners?' ('+owners+')':'')+e+'\n';
+      });
+    });
+    out+='\n';
+  }
+
+  out+='================================================================\n';
+  out+='For questions please contact the Head of Financial and Credit Risk (LOD2).\n';
+  return out.trim()+'\n';
+}
+function openReportModal(){
+  document.getElementById('reportContent').textContent = buildReportText();
+  document.getElementById('reportOverlay').classList.remove('hidden');
+}
+function closeReportModal(){
+  document.getElementById('reportOverlay').classList.add('hidden');
+}
+
+/* ===================== CHARTS ===================== */
+function svgDonut(data, size){
+  size = size || 170;
+  const total = data.reduce((s,d)=>s+d.value,0);
+  const radius = size/2 - 14;
+  const circumference = 2*Math.PI*radius;
+  const cx = size/2, cy = size/2;
+  let circles = '';
+  if(total===0){
+    circles = `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="#EEF1F4" stroke-width="22"/>`;
+  } else {
+    let offset = 0;
+    data.forEach(d=>{
+      if(d.value<=0) return;
+      const frac = d.value/total;
+      const dash = frac*circumference;
+      const gapPx = total>1 ? 2 : 0;
+      circles += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="none" stroke="${d.color}" stroke-width="22" `+
+        `stroke-dasharray="${Math.max(dash-gapPx,0)} ${circumference-dash+gapPx}" stroke-dashoffset="${-offset}" `+
+        `transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round"/>`;
+      offset += dash;
+    });
+  }
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${circles}`+
+    `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="22" font-weight="800" fill="#1A2733" font-family="JetBrains Mono, monospace">${total}</text>`+
+    `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="10" fill="#6B7785" letter-spacing="1">TASKS</text>`+
+    `</svg>`;
+}
+function svgBars(data, width){
+  width = width || 300;
+  const barHeight = 20, gap = 12;
+  const max = Math.max.apply(null, data.map(d=>d.value).concat([1]));
+  const chartW = width - 96;
+  const height = data.length*(barHeight+gap);
+  let bars = '';
+  data.forEach((d,i)=>{
+    const y = i*(barHeight+gap);
+    const w = max>0 ? (d.value/max)*chartW : 0;
+    bars += `<text x="0" y="${y+barHeight*0.72}" font-size="11.5" fill="#44607C" font-family="Inter, sans-serif">${d.label}</text>`;
+    bars += `<rect x="64" y="${y}" width="${Math.max(w,2)}" height="${barHeight}" fill="${d.color}" rx="4"/>`;
+    bars += `<text x="${64+w+8}" y="${y+barHeight*0.72}" font-size="11.5" fill="#1A2733" font-weight="700" font-family="JetBrains Mono, monospace">${d.value}</text>`;
+  });
+  return `<svg width="${width}" height="${Math.max(height,1)}" viewBox="0 0 ${width} ${Math.max(height,1)}">${bars}</svg>`;
+}
+function chartLegend(data){
+  return `<div class="chart-legend">` + data.map(d=>
+    `<span class="legend-item"><span class="legend-dot" style="background:${d.color}"></span>${d.label} (${d.value})</span>`
+  ).join('') + `</div>`;
+}
+function svgFteBars(td){
+  const WD = 220;
+  const w = 360, bh = 24, gap = 14, LW = 44, RW = 60;
+  const maxFte = Math.max(...td.map(t=>tasks.filter(x=>x.team===t.code).reduce((s,x)=>s+(x.effort||0),0)/WD), 0.01);
+  const cw = w - LW - RW;
+  let bars = '';
+  td.forEach((team,i)=>{
+    const fte = tasks.filter(x=>x.team===team.code).reduce((s,x)=>s+(x.effort||0),0)/WD;
+    const fteOpen = tasks.filter(x=>x.team===team.code&&x.status!=='Completed').reduce((s,x)=>s+(x.effort||0),0)/WD;
+    const y = i*(bh+gap);
+    const bwAll = Math.max((fte/maxFte)*cw, 2);
+    const bwOpen = Math.max((fteOpen/maxFte)*cw, 2);
+    const col = TEAM_COLORS[team.code]||'#6B7785';
+    // team code label
+    bars += `<text x="0" y="${y+bh*0.72}" font-size="11" font-weight="700" fill="#15375C" font-family="Inter,sans-serif">${team.code}</text>`;
+    // total bar (lighter)
+    bars += `<rect x="${LW}" y="${y}" width="${bwAll}" height="${bh}" fill="${col}" opacity="0.3" rx="4"/>`;
+    // open bar (solid, overlaid)
+    bars += `<rect x="${LW}" y="${y+4}" width="${bwOpen}" height="${bh-8}" fill="${col}" rx="3"/>`;
+    // value labels
+    bars += `<text x="${LW+bwAll+6}" y="${y+bh*0.72}" font-size="10" fill="#1A2733" font-weight="700" font-family="JetBrains Mono,monospace">${fteOpen.toFixed(2)} / ${fte.toFixed(2)}</text>`;
+  });
+  const h = Math.max(td.length*(bh+gap),1);
+  const legend = `<text x="${LW}" y="${h+14}" font-size="9" fill="#6B7785" font-family="Inter,sans-serif">solid = open FTE  /  light = total FTE  (open / total)</text>`;
+  return `<svg width="${w}" height="${h+20}" viewBox="0 0 ${w} ${h+20}">${bars}${legend}</svg>`;
+}
+function renderCharts(){
+  const open = tasks.filter(t=>t.status!=='Completed');
+  const td = loadTeams();
+
+  const statusData = [
+    {label:'Not started', value: tasks.filter(t=>t.status==='Not Started').length, color:'#6B7785'},
+    {label:'In progress', value: tasks.filter(t=>t.status==='In Progress').length, color:'#15375C'},
+    {label:'Completed',   value: tasks.filter(t=>t.status==='Completed').length,   color:'#2E9E5B'}
+  ];
+  const ragData = [
+    {label:'Green', value: open.filter(t=>t.rag==='Green').length, color:'#2E9E5B'},
+    {label:'Amber', value: open.filter(t=>t.rag==='Amber').length, color:'#D98E04'},
+    {label:'Red',   value: open.filter(t=>t.rag==='Red').length,   color:'#D64545'}
+  ];
+  const teamOrder = ['ROC','CR','DRR','FRF','ALL'];
+  const teamData = teamOrder
+    .map(team=>({label:team, value: open.filter(t=>t.team===team).length, color: TEAM_COLORS[team]||'#6B7785'}))
+    .filter(d=>d.value>0);
+  const priorityData = [
+    {label:'Critical', value: open.filter(t=>t.priority==='Critical').length, color:'#D64545'},
+    {label:'High',     value: open.filter(t=>t.priority==='High').length,     color:'#D98E04'},
+    {label:'Medium',   value: open.filter(t=>t.priority==='Medium').length,   color:'#15375C'},
+    {label:'Low',      value: open.filter(t=>t.priority==='Low').length,      color:'#6B7785'}
+  ];
+
+  // FTE by team (open tasks only)
+  const WD = 220;
+  const fteOpenData = td.map(t=>({
+    label: t.code,
+    value: parseFloat((tasks.filter(x=>x.team===t.code&&x.status!=='Completed').reduce((s,x)=>s+(x.effort||0),0)/WD).toFixed(2)),
+    color: TEAM_COLORS[t.code]||'#6B7785'
+  })).filter(d=>d.value>0);
+  const fteTotalData = td.map(t=>({
+    label: t.code,
+    value: parseFloat((tasks.filter(x=>x.team===t.code).reduce((s,x)=>s+(x.effort||0),0)/WD).toFixed(2)),
+    color: TEAM_COLORS[t.code]||'#6B7785'
+  })).filter(d=>d.value>0);
+
+  // Est vs Actual per team (completed tasks with actual filled)
+  function svgEstVsAct(tdArr){
+    const W = 420, ROW = 56, LW = 46, BAR_MAX = 280, PAD = 8;
+    const rows = tdArr.map(team=>{
+      const don = tasks.filter(t=>t.team===team.code&&t.status==='Completed'&&t.actual!=null);
+      const est = don.reduce((s,t)=>s+(t.effort||0),0);
+      const act = don.reduce((s,t)=>s+(t.actual||0),0);
+      return {code:team.code, name:team.name, est, act, n:don.length};
+    }).filter(r=>r.n>0);
+    if(!rows.length) return '<p style="color:var(--text-muted);font-size:12px;padding:10px 0;">No completed tasks with actual effort entered yet.<br>Fill the Actual field when closing a task.</p>';
+    const maxV = Math.max(...rows.flatMap(r=>[r.est,r.act]), 0.01);
+    const H = rows.length * ROW + 30;
+    let out = '';
+    // header
+    out += `<text x="${LW}" y="14" font-size="10" fill="#6B7785" font-family="Inter,sans-serif">Estimated</text>`;
+    out += `<text x="${LW+BAR_MAX/2}" y="14" font-size="10" fill="#6B7785" font-family="Inter,sans-serif">Actual</text>`;
+    rows.forEach((r,i)=>{
+      const y = 22 + i*ROW;
+      const BH = 16;
+      const we = Math.max((r.est/maxV)*BAR_MAX, 3);
+      const wa = Math.max((r.act/maxV)*BAR_MAX, 3);
+      // colour logic: actual > estimated = underestimate = RED (bad)
+      //               actual < estimated = overestimate  = GREEN (delivered faster)
+      //               within 10%                         = AMBER (on target)
+      const col = r.act > r.est*1.1 ? '#D64545' : r.act < r.est*0.9 ? '#2E9E5B' : '#D98E04';
+      const pct = r.est>0 ? Math.round((r.act-r.est)/r.est*100) : 0;
+      const pctStr = (pct>0?'+':'')+pct+'%';
+      // team label
+      out += `<text x="0" y="${y+BH*0.75}" font-size="11" font-weight="700" fill="#15375C" font-family="Inter,sans-serif">${r.code}</text>`;
+      // estimated bar (navy)
+      out += `<rect x="${LW}" y="${y}" width="${we}" height="${BH}" fill="#15375C" opacity="0.7" rx="4"/>`;
+      out += `<text x="${LW+we+5}" y="${y+BH*0.78}" font-size="10" fill="#15375C" font-family="JetBrains Mono,monospace">${r.est}d</text>`;
+      // actual bar
+      out += `<rect x="${LW}" y="${y+BH+4}" width="${wa}" height="${BH}" fill="${col}" rx="4"/>`;
+      out += `<text x="${LW+wa+5}" y="${y+BH*2+3}" font-size="10" font-weight="700" fill="${col}" font-family="JetBrains Mono,monospace">${r.act}d <tspan font-size="9">(${pctStr})</tspan></text>`;
+    });
+    return `<div style="overflow-x:auto;"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>
+      <div style="font-size:11px;margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#D64545;border-radius:2px;margin-right:4px;"></span>Underestimated (actual &gt; estimate)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#2E9E5B;border-radius:2px;margin-right:4px;"></span>Delivered faster (actual &lt; estimate)</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#D98E04;border-radius:2px;margin-right:4px;"></span>On target (&plusmn;10%)</span>
+      </div>`;
+  }
+
+  const cards = [
+    {title:'Tasks by status', body: `<div class="chart-body">${svgBars(statusData,300)}</div>`},
+    {title:'Open tasks by RAG', body: `<div class="chart-body">${svgDonut(ragData)}</div>${chartLegend(ragData)}`},
+    {title:'Open tasks by team', body: `<div class="chart-body">${svgBars(teamData,300)}</div>`},
+    {title:'Open tasks by priority', body: `<div class="chart-body">${svgBars(priorityData,300)}</div>`},
+    {title:'FTE by team (open tasks)', body: `<div class="chart-body">${svgFteBars(td)}</div><div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;">FTE = effort days / 220 working days</div>`},
+    {title:'FTE by team (all tasks)', body: `<div class="chart-body">${svgBars(fteTotalData,300)}</div><div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px;">Includes completed tasks</div>`},
+    {title:'Estimated vs Actual effort by team', body: `<div class="chart-body">${svgEstVsAct(td)}</div>`, wide:true}
+  ];
+
+  document.getElementById('chartsContent').innerHTML = cards.map(c=>
+    `<div class="chart-card${c.wide?' wide':''}"><h4>${c.title}</h4>${c.body}</div>`
+  ).join('');
+}
+function openChartsModal(){
+  renderCharts();
+  document.getElementById('chartsOverlay').classList.remove('hidden');
+}
+function closeChartsModal(){
+  document.getElementById('chartsOverlay').classList.add('hidden');
+}
+
+/* ===================== EVENTS ===================== */
+document.getElementById('searchBox').addEventListener('input', e=>{ state.search=e.target.value; render(); });
+document.getElementById('filterTeam').addEventListener('change', e=>{ state.team=e.target.value; render(); });
+document.getElementById('filterPriority').addEventListener('change', e=>{ state.priority=e.target.value; render(); });
+document.getElementById('filterStatus').addEventListener('change', e=>{ state.status=e.target.value; render(); });
+document.getElementById('filterRag').addEventListener('change', e=>{ state.rag=e.target.value; render(); });
+document.getElementById('filterOwner').addEventListener('change', e=>{ state.owner=e.target.value; render(); });
+document.getElementById('hideCompleted').addEventListener('change', e=>{ state.hideCompleted=e.target.checked; render(); });
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  state.search=''; state.team='all'; state.priority='all'; state.status='all';
+  state.rag='all'; state.owner='all'; state.radarMonth='all'; state.hideCompleted=true;
+  document.getElementById('searchBox').value='';
+  document.getElementById('filterTeam').value='all';
+  document.getElementById('filterPriority').value='all';
+  document.getElementById('filterStatus').value='all';
+  document.getElementById('filterRag').value='all';
+  document.getElementById('filterOwner').value='all';
+  document.getElementById('hideCompleted').checked=true;
+  render();
+});
+
+document.getElementById('addBtn').addEventListener('click', ()=> openModal(null));
+document.getElementById('cancelBtn').addEventListener('click', closeModal);
+document.getElementById('saveBtn').addEventListener('click', saveTaskFromForm);
+document.getElementById('deleteBtn').addEventListener('click', deleteTask);
+document.getElementById('modalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='modalOverlay') closeModal();
+});
+
+document.getElementById('reportBtn').addEventListener('click', openReportModal);
+document.getElementById('reportCloseBtn').addEventListener('click', closeReportModal);
+document.getElementById('reportOverlay').addEventListener('click', e=>{
+  if(e.target.id==='reportOverlay') closeReportModal();
+});
+
+document.getElementById('chartsBtn').addEventListener('click', openChartsModal);
+document.getElementById('chartsCloseBtn').addEventListener('click', closeChartsModal);
+document.getElementById('chartsOverlay').addEventListener('click', e=>{
+  if(e.target.id==='chartsOverlay') closeChartsModal();
+});
+document.getElementById('reportCopyBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('reportContent').textContent;
+  const btn = document.getElementById('reportCopyBtn');
+  try{
+    await navigator.clipboard.writeText(text);
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=>{ btn.textContent = orig; }, 1500);
+  }catch(e){
+    alert('Could not copy automatically. Please select the text and copy it manually.');
+  }
+});
+document.getElementById('reportDownloadBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('reportContent').textContent;
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'LOD2_Weekly_Report_' + toISO(TODAY) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnTable').addEventListener('click', ()=>{
+  state.view='table';
+  document.getElementById('btnTable').classList.add('active');
+  document.getElementById('btnBoard').classList.remove('active');
+  render();
+});
+document.getElementById('btnBoard').addEventListener('click', ()=>{
+  state.view='board';
+  document.getElementById('btnBoard').classList.add('active');
+  document.getElementById('btnTable').classList.remove('active');
+  render();
+});
+
+document.querySelectorAll('thead th[data-key]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const key = th.dataset.key;
+    if(state.sortKey===key){ state.sortAsc=!state.sortAsc; }
+    else { state.sortKey=key; state.sortAsc=true; }
+    render();
+  });
+});
+
+/* ===================== INIT ===================== */
+(async function init(){
+  await loadTasks();
+  document.getElementById('todayLine').textContent =
+    'Updated as of ' + TODAY.getDate() + ' ' + MONTHS_EN[TODAY.getMonth()] + ' ' + TODAY.getFullYear() + ' \u00b7 ' + tasks.length + ' tasks tracked';
+  populateFilters();
+  render();
+})();
+</script>
+
+<div id="fteOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:700px;">
+    <h2>FTE Report &mdash; Annual effort by team</h2>
+    <div class="report-box" id="fteContent"></div>
+    <div class="modal-actions">
+      <div class="left"><span style="font-size:11px;color:var(--text-muted);">220 working days = 1.0 FTE. Edit each task to adjust effort.</span></div>
+      <div class="right">
+        <button class="cancel-btn" id="fteCloseBtn">Close</button>
+        <button class="btn" id="fteCopyBtn">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function buildFteText(){
+  const WD = 220;
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  const td = loadTeams();
+  const totAll  = tasks.reduce((s,t)=>s+(t.effort||0),0);
+  const totOpen = tasks.filter(t=>t.status!=='Completed').reduce((s,t)=>s+(t.effort||0),0);
+  const totDone = tasks.filter(t=>t.status==='Completed').reduce((s,t)=>s+(t.effort||0),0);
+  let o = '';
+  o += '================================================================\n';
+  o += 'LOD2 - FTE EFFORT REPORT\n';
+  o += 'Prepared by: Head of Financial and Credit Risk (LOD2)\n';
+  o += 'Date: '+ds+'\n';
+  o += 'Basis: 220 working days per year = 1.0 FTE\n';
+  o += '================================================================\n\n';
+  o += 'TOTAL LOD2 - FINANCIAL AND CREDIT RISK\n';
+  o += '  Tasks tracked:        '+tasks.length+'\n';
+  o += '  Effort total:         '+totAll.toFixed(1)+'d  ->  '+(totAll/WD).toFixed(2)+' FTE\n';
+  o += '  Effort open:          '+totOpen.toFixed(1)+'d  ->  '+(totOpen/WD).toFixed(2)+' FTE\n';
+  o += '  Effort completed:     '+totDone.toFixed(1)+'d  ->  '+(totDone/WD).toFixed(2)+' FTE\n\n';
+  o += '----------------------------------------------------------------\n';
+  o += 'BY TEAM\n\n';
+  td.forEach(team => {
+    const code = team.code;
+    const all = tasks.filter(t=>t.team===code);
+    const opn = all.filter(t=>t.status!=='Completed');
+    const don = all.filter(t=>t.status==='Completed');
+    const eA  = all.reduce((s,t)=>s+(t.effort||0),0);
+    const eO  = opn.reduce((s,t)=>s+(t.effort||0),0);
+    const eD  = don.reduce((s,t)=>s+(t.effort||0),0);
+    const actD = don.filter(t=>t.actual!=null).reduce((s,t)=>s+(t.actual||0),0);
+    const estD = don.filter(t=>t.actual!=null).reduce((s,t)=>s+(t.effort||0),0);
+    const delta = estD>0 ? ((actD-estD)/estD*100) : null;
+    o += 'Team: '+team.name+' ('+code+')\n';
+    o += '  Lead:                  '+(team.lead||'n/a')+'\n';
+    o += '  Members:               '+(team.members.join(', ')||'n/a')+'\n';
+    o += '  Tasks (tot/open/done): '+all.length+' / '+opn.length+' / '+don.length+'\n';
+    o += '  Effort estimated:      '+eA.toFixed(1)+'d  ->  '+(eA/WD).toFixed(2)+' FTE\n';
+    o += '  Effort open:           '+eO.toFixed(1)+'d  ->  '+(eO/WD).toFixed(2)+' FTE\n';
+    if(don.length){
+      o += '  Effort completed (est):'+eD.toFixed(1)+'d\n';
+      if(actD>0){
+        const sign = delta>=0?'+':'';
+        o += '  Effort completed (act):'+actD.toFixed(1)+'d  ->  variance: '+sign+delta.toFixed(0)+'%'+(delta>15?' (underestimated)':(delta<-15?' (delivered faster)':'  (on target)')+'\n');
+      } else {
+        o += '  Effort completed (act): n/a (no actuals entered yet)\n';
+      }
+      o += '  Completed tasks:\n';
+      don.forEach(t => {
+        const actStr = t.actual!=null?' / act: '+t.actual+'d':'';
+        const varStr = (t.actual!=null&&t.effort>0)?' ('+(((t.actual-t.effort)/t.effort)*100).toFixed(0)+'%)':'';
+        o += '    - '+t.task+(t.owner?' ('+t.owner+')':'')+' [est: '+(t.effort||0)+'d'+actStr+varStr+']\n';
+      });
+    }
+    o += '\n';
+  });
+  return o.trim()+'\n';
+}
+function openFteModal(){
+  document.getElementById('fteContent').textContent = buildFteText();
+  document.getElementById('fteOverlay').classList.remove('hidden');
+}
+function closeFteModal(){ document.getElementById('fteOverlay').classList.add('hidden'); }
+document.getElementById('fteBtn').addEventListener('click', openFteModal);
+document.getElementById('fteCloseBtn').addEventListener('click', closeFteModal);
+document.getElementById('fteOverlay').addEventListener('click', e=>{ if(e.target.id==='fteOverlay') closeFteModal(); });
+document.getElementById('fteCopyBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('fteContent').textContent;
+  const btn = document.getElementById('fteCopyBtn');
+  try{
+    await navigator.clipboard.writeText(text);
+    const orig = btn.textContent; btn.textContent='Copied!';
+    setTimeout(()=>{ btn.textContent=orig; },1500);
+  }catch(e){ alert('Select text and copy manually.'); }
+});
+</script>
+
+<div id="teamsOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:680px;">
+    <h2>Team configuration</h2>
+    <div id="teamsBody" style="display:flex;flex-direction:column;gap:18px;"></div>
+    <div class="modal-actions" style="margin-top:20px;">
+      <div class="left">
+        <button class="btn" id="teamsAddTeamBtn">+ Add team</button>
+      </div>
+      <div class="right">
+        <button class="cancel-btn" id="teamsCloseBtn">Close</button>
+        <button class="save-btn" id="teamsSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== TEAMS ===================== */
+const TEAMS_KEY = 'lod2-teams-data';
+const DEFAULT_TEAMS = [
+  { code:'CR',  name:'Credit Risk',                   lead:'Luigi Barone',     members:['Luigi Barone','Valentina Vano','Benedetta Volonte'] },
+  { code:'ROC', name:'Risk Oversight & Control',      lead:'Giulia Poce',      members:['Giulia Poce','Ludovica Apostolico','Stefano Gabana'] },
+  { code:'FRF', name:'Financial Risk Frameworks',     lead:'Manuel Sforza',    members:['Manuel Sforza','Giulio Santorelli'] },
+  { code:'DRR', name:'Default, Recovery & Resolution',lead:'Tommaso Mingazzini',members:['Tommaso Mingazzini','Matteo Monti','Francesco Gagliano'] }
+];
+
+function loadTeams(){
+  try{
+    const raw = window.storage ? null : localStorage.getItem(TEAMS_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_TEAMS));
+}
+function saveTeams(data){
+  try{
+    if(!window.storage) localStorage.setItem(TEAMS_KEY, JSON.stringify(data));
+  }catch(e){}
+}
+
+let teamsData = loadTeams();
+
+function renderTeamsModal(){
+  const body = document.getElementById('teamsBody');
+  body.innerHTML = '';
+  teamsData.forEach((team, ti) => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#F8FAFC;border:1px solid var(--border);border-radius:10px;padding:14px 16px;';
+    card.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <input class="tm-code" data-ti="${ti}" value="${escapeHtml(team.code)}" placeholder="Code (e.g. CR)"
+          style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;">
+        <input class="tm-name" data-ti="${ti}" value="${escapeHtml(team.name)}" placeholder="Team name"
+          style="flex:1;min-width:160px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+        <button class="tm-del-team" data-ti="${ti}"
+          style="border:1px solid var(--red-bg);background:var(--red-bg);color:var(--red);border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;">Remove team</button>
+      </div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:700;margin-bottom:6px;">Members</div>
+      <div class="tm-members" data-ti="${ti}" style="display:flex;flex-direction:column;gap:6px;">
+        ${team.members.map((m,mi) => `
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input class="tm-member-name" data-ti="${ti}" data-mi="${mi}" value="${escapeHtml(m)}"
+              style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--steel);white-space:nowrap;cursor:pointer;">
+              <input type="radio" name="lead-${ti}" class="tm-lead" data-ti="${ti}" data-mi="${mi}" ${team.lead===m?'checked':''}>
+              Lead
+            </label>
+            <button class="tm-del-member" data-ti="${ti}" data-mi="${mi}"
+              style="border:1px solid var(--border);background:#fff;color:var(--text-muted);border-radius:6px;padding:5px 8px;font-size:12px;cursor:pointer;">x</button>
+          </div>`).join('')}
+      </div>
+      <button class="tm-add-member" data-ti="${ti}"
+        style="margin-top:8px;border:1px solid var(--border);background:#fff;color:var(--steel);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;">+ Add member</button>
+    `;
+    body.appendChild(card);
+  });
+
+  // events
+  body.querySelectorAll('.tm-del-team').forEach(btn => {
+    btn.addEventListener('click', () => {
+      teamsData.splice(+btn.dataset.ti, 1);
+      renderTeamsModal();
+    });
+  });
+  body.querySelectorAll('.tm-add-member').forEach(btn => {
+    btn.addEventListener('click', () => {
+      teamsData[+btn.dataset.ti].members.push('');
+      renderTeamsModal();
+    });
+  });
+  body.querySelectorAll('.tm-del-member').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ti = +btn.dataset.ti, mi = +btn.dataset.mi;
+      teamsData[ti].members.splice(mi, 1);
+      if(teamsData[ti].lead === teamsData[ti].members[mi]) teamsData[ti].lead = teamsData[ti].members[0]||'';
+      renderTeamsModal();
+    });
+  });
+}
+
+function openTeamsModal(){
+  teamsData = loadTeams();
+  renderTeamsModal();
+  document.getElementById('teamsOverlay').classList.remove('hidden');
+}
+function closeTeamsModal(){ document.getElementById('teamsOverlay').classList.add('hidden'); }
+
+document.getElementById('teamsBtn').addEventListener('click', openTeamsModal);
+document.getElementById('teamsCloseBtn').addEventListener('click', closeTeamsModal);
+document.getElementById('teamsOverlay').addEventListener('click', e=>{ if(e.target.id==='teamsOverlay') closeTeamsModal(); });
+
+document.getElementById('teamsAddTeamBtn').addEventListener('click', ()=>{
+  teamsData.push({code:'NEW', name:'New team', lead:'', members:['']});
+  renderTeamsModal();
+});
+
+document.getElementById('teamsSaveBtn').addEventListener('click', ()=>{
+  const body = document.getElementById('teamsBody');
+  teamsData.forEach((team, ti) => {
+    const codeEl = body.querySelector(`.tm-code[data-ti="${ti}"]`);
+    const nameEl = body.querySelector(`.tm-name[data-ti="${ti}"]`);
+    if(codeEl) team.code = codeEl.value.trim().toUpperCase();
+    if(nameEl) team.name = nameEl.value.trim();
+    const memberEls = body.querySelectorAll(`.tm-member-name[data-ti="${ti}"]`);
+    team.members = Array.from(memberEls).map(el => el.value.trim()).filter(v=>v);
+    const leadEl = body.querySelector(`.tm-lead[data-ti="${ti}"]:checked`);
+    if(leadEl){
+      const mi = +leadEl.dataset.mi;
+      team.lead = team.members[mi] || team.members[0] || '';
+    } else {
+      team.lead = team.members[0] || '';
+    }
+  });
+  saveTeams(teamsData);
+  closeTeamsModal();
+  alert('Teams saved.');
+});
+</script>
+
+<div id="ganttOverlay" class="modal-overlay hidden" style="padding:0;align-items:stretch;">
+  <div style="background:#fff;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:17px;font-weight:800;color:var(--navy);">Gantt &mdash; Task timeline</span>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="ganttFilterTeam" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+          <option value="all">All teams</option>
+        </select>
+        <select id="ganttFilterStatus" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+          <option value="all">All statuses</option>
+          <option value="Not Started">Not Started</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+        <label style="font-size:12px;color:var(--steel);display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="ganttHideCompleted" checked> Hide completed
+        </label>
+        <span style="font-size:11px;color:var(--text-muted);">Today = red line. Dot = RAG at due date.</span>
+        <button class="cancel-btn" id="ganttCloseBtn" style="padding:7px 16px;">Close</button>
+      </div>
+    </div>
+    <div id="ganttContent" style="flex:1;overflow:auto;padding:0;"></div>
+  </div>
+</div>
+
+<script>
+function renderGantt(){
+  const teamF  = document.getElementById('ganttFilterTeam').value;
+  const statF  = document.getElementById('ganttFilterStatus').value;
+  const hideC  = document.getElementById('ganttHideCompleted').checked;
+
+  let list = tasks.filter(t=>{
+    if(hideC && t.status==='Completed') return false;
+    if(teamF!=='all' && t.team!==teamF) return false;
+    if(statF!=='all' && t.status!==statF) return false;
+    return true;
+  });
+
+  // sort: tasks with due date first (by date), then no-date
+  list.sort((a,b)=>{
+    const ad=fromISO(a.dueISO), bd=fromISO(b.dueISO);
+    if(!ad && !bd) return 0;
+    if(!ad) return 1;
+    if(!bd) return -1;
+    return ad-bd;
+  });
+
+  if(!list.length){
+    document.getElementById('ganttContent').innerHTML='<p style="color:var(--text-muted);padding:20px;">No tasks match the filters.</p>';
+    return;
+  }
+
+  // date range: from earliest due or today-30, to latest due or today+90
+  const dated = list.filter(t=>t.dueISO);
+  const allDates = dated.map(t=>fromISO(t.dueISO));
+  const minD = allDates.length ? new Date(Math.min(...allDates)) : new Date(TODAY);
+  const maxD = allDates.length ? new Date(Math.max(...allDates)) : new Date(TODAY);
+  // pad
+  minD.setDate(minD.getDate()-14);
+  maxD.setDate(maxD.getDate()+14);
+  const totalDays = Math.round((maxD-minD)/86400000)||1;
+
+  const ROW_H = 32, LABEL_W = 300, BAR_W_MAX = Math.max(window.innerWidth - 340, 800);
+  const totalW = LABEL_W + BAR_W_MAX;
+  const totalH = list.length * ROW_H + 30;
+
+  function dToX(d){ return LABEL_W + Math.round(((d-minD)/86400000)/totalDays*BAR_W_MAX); }
+
+  // month grid lines
+  let gridLines = '';
+  let cur = new Date(minD.getFullYear(), minD.getMonth(), 1);
+  while(cur <= maxD){
+    const x = dToX(cur);
+    const label = MONTHS_EN[cur.getMonth()]+' '+cur.getFullYear();
+    gridLines += `<line x1="${x}" y1="20" x2="${x}" y2="${totalH}" stroke="#E1E7ED" stroke-width="1"/>`;
+    gridLines += `<text x="${x+4}" y="14" font-size="10" fill="#6B7785" font-family="Inter,sans-serif">${label}</text>`;
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
+
+  // today line
+  const todayX = dToX(TODAY);
+  const todayLine = todayX>=LABEL_W && todayX<=totalW
+    ? `<line x1="${todayX}" y1="0" x2="${todayX}" y2="${totalH}" stroke="#D64545" stroke-width="1.5" stroke-dasharray="4,3"/>`
+    + `<text x="${todayX+3}" y="14" font-size="9" fill="#D64545" font-family="Inter,sans-serif">Today</text>`
+    : '';
+
+  // rows
+  let rows = '';
+  list.forEach((t,i)=>{
+    const y = 20 + i*ROW_H;
+    const bg = i%2===0 ? '#FAFCFE' : '#FFFFFF';
+    rows += `<rect x="0" y="${y}" width="${totalW}" height="${ROW_H}" fill="${bg}"/>`;
+
+    // label
+    const label = (t.team?'['+t.team+'] ':'')+t.task;
+    const labelShort = label.length>38 ? label.slice(0,37)+'...' : label;
+    const lc = t.status==='Completed'?'#2E9E5B': t.status==='In Progress'?'#15375C':'#6B7785';
+    rows += `<text x="8" y="${y+ROW_H*0.65}" font-size="11" fill="${lc}" font-family="Inter,sans-serif" font-weight="${t.status==='In Progress'?'600':'400'}">${escapeHtml(labelShort)}</text>`;
+
+    // bar (from today back to due, or just a dot if no start known)
+    if(t.dueISO){
+      const dueD = fromISO(t.dueISO);
+      const x2 = Math.min(dToX(dueD), totalW);
+      // start: if in progress use today, else use due date minus effort days, fallback to due-1
+      let startD;
+      if(t.status==='Completed'){
+        startD = new Date(dueD); startD.setDate(startD.getDate()-(t.effort||1));
+      } else if(t.status==='In Progress'){
+        startD = new Date(TODAY);
+      } else {
+        startD = new Date(dueD); startD.setDate(startD.getDate()-(t.effort||1));
+      }
+      const x1 = Math.max(dToX(startD), LABEL_W);
+      const bw = Math.max(x2-x1, 4);
+      const ragCol = t.rag==='Red'?'#D64545':t.rag==='Amber'?'#D98E04':'#2E9E5B';
+      const barCol = t.status==='Completed' ? '#2E9E5B' : (TEAM_COLORS[t.team]||'#44607C');
+      const opacity = t.status==='Completed' ? '0.5' : '0.85';
+      rows += `<rect x="${x1}" y="${y+5}" width="${bw}" height="${ROW_H-10}" fill="${barCol}" opacity="${opacity}" rx="3"/>`;
+      // RAG dot at due date
+      rows += `<circle cx="${x2}" cy="${y+ROW_H/2}" r="4" fill="${ragCol}"/>`;
+      // days label inside bar if wide enough
+      if(bw>30){
+        const dl = daysLeft(t);
+        const dlTxt = dl===null?'':dl<0?Math.abs(dl)+'d late':dl===0?'today':dl+'d';
+        rows += `<text x="${x1+5}" y="${y+ROW_H*0.68}" font-size="9" fill="#fff" font-family="JetBrains Mono,monospace">${dlTxt}</text>`;
+      }
+    } else {
+      // no date: show label only, no bar
+      rows += `<text x="${LABEL_W+10}" y="${y+ROW_H*0.65}" font-size="10" fill="#B0B8C1" font-family="Inter,sans-serif">no due date</text>`;
+    }
+  });
+
+  const svg = `<svg width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}" xmlns="http://www.w3.org/2000/svg">
+    ${gridLines}${todayLine}${rows}
+  </svg>`;
+  document.getElementById('ganttContent').innerHTML = svg;
+}
+
+function openGanttModal(){
+  // populate team filter
+  const sel = document.getElementById('ganttFilterTeam');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="all">All teams</option>';
+  [...new Set(tasks.map(t=>t.team).filter(Boolean))].sort().forEach(tm=>{
+    const o = document.createElement('option');
+    o.value=tm; o.textContent=tm;
+    sel.appendChild(o);
+  });
+  if(prev) sel.value=prev;
+  renderGantt();
+  document.getElementById('ganttOverlay').classList.remove('hidden');
+}
+function closeGanttModal(){ document.getElementById('ganttOverlay').classList.add('hidden'); }
+
+document.getElementById('ganttBtn').addEventListener('click', openGanttModal);
+document.getElementById('ganttCloseBtn').addEventListener('click', closeGanttModal);
+document.getElementById('ganttOverlay').addEventListener('click', e=>{ if(e.target.id==='ganttOverlay') closeGanttModal(); });
+document.getElementById('ganttFilterTeam').addEventListener('change', renderGantt);
+document.getElementById('ganttFilterStatus').addEventListener('change', renderGantt);
+document.getElementById('ganttHideCompleted').addEventListener('change', renderGantt);
+</script>
+
+<script>
+/* ===================== CSV EXPORT ===================== */
+function exportCSV(){
+  const headers = ['ID','Task','Team','Priority','Status','RAG','Owner','Backup','Due Date','Effort Est (d)','Effort Act (d)','Completed At','Log entries'];
+  const esc = v => {
+    if(v==null) return '';
+    const str = String(v).replace(/"/g,'""');
+    return str.includes(',') || str.includes('"') || str.includes('\n') ? '"'+str+'"' : str;
+  };
+  const rows = tasks.map(t=>{
+    const logText = (t.log||[]).map(e=>e.date+': '+e.text).join(' | ');
+    return [
+      t.id, t.task, t.team, t.priority, t.status, t.rag,
+      t.owner||'', t.backup||'',
+      t.dueISO||'',
+      t.effort!=null?t.effort:'',
+      t.actual!=null?t.actual:'',
+      t.completedAt||'',
+      logText
+    ].map(esc).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'LOD2_Tasks_'+toISO(TODAY)+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('csvBtn').addEventListener('click', exportCSV);
+</script>
+
+<div id="logOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:620px;">
+    <h2 id="logTitle">Task log</h2>
+    <div id="logEntries" style="display:flex;flex-direction:column;gap:10px;max-height:340px;overflow-y:auto;margin-bottom:18px;padding-right:4px;"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Add new entry</div>
+      <textarea id="logInput" placeholder="e.g. Escalated to CRO — waiting for sign-off..." rows="3"
+        style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:Inter,sans-serif;resize:vertical;"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+        <span id="logDateLabel" style="font-size:12px;color:var(--text-muted);"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="cancel-btn" id="logCloseBtn">Close</button>
+          <button class="save-btn" id="logAddBtn">Add entry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== TASK LOG ===================== */
+let logTaskId = null;
+
+function openLogModal(taskId){
+  logTaskId = taskId;
+  const t = tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  document.getElementById('logTitle').textContent = t.task;
+  document.getElementById('logInput').value = '';
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  document.getElementById('logDateLabel').textContent = 'Entry date: '+ds;
+  renderLogEntries(t);
+  document.getElementById('logOverlay').classList.remove('hidden');
+}
+
+function renderLogEntries(t){
+  const container = document.getElementById('logEntries');
+  const entries = (t.log||[]).slice().reverse(); // most recent first
+  if(!entries.length){
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;font-style:italic;">No log entries yet. Add the first one below.</p>';
+    return;
+  }
+  container.innerHTML = entries.map((e,i)=>`
+    <div style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:10px 12px;position:relative;">
+      <div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">${e.date}</div>
+      <div style="font-size:13px;color:var(--navy);line-height:1.5;white-space:pre-wrap;">${escapeHtml(e.text)}</div>
+      <button data-idx="${(t.log||[]).length-1-i}" class="log-del-btn"
+        style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;line-height:1;" title="Delete entry">x</button>
+    </div>
+  `).join('');
+  container.querySelectorAll('.log-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t2 = tasks.find(x=>x.id===logTaskId);
+      if(!t2) return;
+      if(!confirm('Delete this log entry?')) return;
+      t2.log.splice(+btn.dataset.idx, 1);
+      saveTasks();
+      renderLogEntries(t2);
+      render();
+    });
+  });
+}
+
+function closeLogModal(){ document.getElementById('logOverlay').classList.add('hidden'); logTaskId=null; }
+
+document.getElementById('logCloseBtn').addEventListener('click', closeLogModal);
+document.getElementById('logOverlay').addEventListener('click', e=>{ if(e.target.id==='logOverlay') closeLogModal(); });
+
+document.getElementById('logAddBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('logInput').value.trim();
+  if(!text) return;
+  const t = tasks.find(x=>x.id===logTaskId);
+  if(!t) return;
+  if(!t.log) t.log=[];
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  t.log.push({date: ds, text: text});
+  saveTasks();
+  document.getElementById('logInput').value='';
+  renderLogEntries(t);
+  render(); // refresh log count badge on table
+});
+
+// delegate log button clicks on table
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('.log-btn');
+  if(btn) openLogModal(btn.dataset.id);
+});
+</script>
+
+<!-- ══ QUICK NOTES MODAL ══ -->
+<div id="quickOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:580px;">
+    <h2>Quick notes</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">One-shot tasks and ad-hoc requests. Saved automatically.</p>
+    <div id="quickList" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="quickInput" placeholder="e.g. Prepare slides for next Risk Committee..." style="flex:1;">
+      <button class="save-btn" id="quickAddBtn">Add</button>
+    </div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <div class="left"><span style="font-size:11px;color:var(--text-muted);">Tip: promote to a full task via the + Add task button.</span></div>
+      <div class="right"><button class="cancel-btn" id="quickCloseBtn">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CALENDAR MODAL ══ -->
+<div id="calOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:620px;">
+    <h2>Calendar &amp; scheduled events</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">Governance meetings, committees, deadlines. Sorted by date automatically.</p>
+    <div id="calList" style="display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="date" id="calDate" style="width:150px;">
+      <input type="text" id="calInput" placeholder="e.g. Consiglio di Amministrazione" style="flex:1;min-width:180px;">
+      <select id="calType" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+        <option value="governance">Governance</option>
+        <option value="regulatory">Regulatory</option>
+        <option value="internal">Internal</option>
+        <option value="deadline">Deadline</option>
+        <option value="other">Other</option>
+      </select>
+      <button class="save-btn" id="calAddBtn">Add</button>
+    </div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <div class="left"></div>
+      <div class="right"><button class="cancel-btn" id="calCloseBtn">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   OWNER TAGS
+══════════════════════════════════════ */
+let currentOwners = [];
+function renderOwnerTags(){
+  const box = document.getElementById('ownerTags');
+  box.innerHTML = currentOwners.map((o,i)=>`
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--teal);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:600;">
+      ${escapeHtml(o)}
+      <button data-i="${i}" style="background:none;border:none;color:#fff;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;" class="rm-owner">x</button>
+    </span>`).join('');
+  box.querySelectorAll('.rm-owner').forEach(btn=>{
+    btn.addEventListener('click', e=>{ e.stopPropagation(); currentOwners.splice(+btn.dataset.i,1); renderOwnerTags(); });
+  });
+  document.getElementById('f-owner').value = currentOwners.join(', ');
+}
+document.getElementById('ownerInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const v = e.target.value.trim().replace(/,$/,'');
+    if(v && !currentOwners.includes(v)){ currentOwners.push(v); renderOwnerTags(); }
+    e.target.value='';
+  }
+});
+
+/* ══════════════════════════════════════
+   QUICK NOTES
+══════════════════════════════════════ */
+const QUICK_KEY = 'lod2-quick-notes';
+function loadQuick(){ try{ return JSON.parse(localStorage.getItem(QUICK_KEY)||'[]'); }catch(e){ return []; } }
+function saveQuick(d){ try{ localStorage.setItem(QUICK_KEY,JSON.stringify(d)); }catch(e){} }
+
+function renderQuickList(){
+  const items = loadQuick();
+  const el = document.getElementById('quickList');
+  if(!items.length){ el.innerHTML='<p style="color:var(--text-muted);font-size:13px;font-style:italic;">No quick notes yet.</p>'; return; }
+  el.innerHTML = items.map((n,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#F8FAFC;">
+      <input type="checkbox" ${n.done?'checked':''} data-i="${i}" class="qn-chk" style="cursor:pointer;">
+      <span style="flex:1;font-size:13px;${n.done?'text-decoration:line-through;color:var(--text-muted);':'color:var(--navy);'}">${escapeHtml(n.text)}</span>
+      <span style="font-size:10px;color:var(--text-muted);white-space:nowrap;">${n.date}</span>
+      <button data-i="${i}" class="qn-del" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">x</button>
+    </div>`).join('');
+  el.querySelectorAll('.qn-chk').forEach(cb=>{
+    cb.addEventListener('change',()=>{ const d=loadQuick(); d[+cb.dataset.i].done=cb.checked; saveQuick(d); renderQuickList(); });
+  });
+  el.querySelectorAll('.qn-del').forEach(btn=>{
+    btn.addEventListener('click',()=>{ if(!confirm('Delete?')) return; const d=loadQuick(); d.splice(+btn.dataset.i,1); saveQuick(d); renderQuickList(); });
+  });
+}
+function openQuickModal(){ renderQuickList(); document.getElementById('quickOverlay').classList.remove('hidden'); }
+function closeQuickModal(){ document.getElementById('quickOverlay').classList.add('hidden'); }
+
+document.getElementById('quickBtn').addEventListener('click', openQuickModal);
+document.getElementById('quickCloseBtn').addEventListener('click', closeQuickModal);
+document.getElementById('quickOverlay').addEventListener('click', e=>{ if(e.target.id==='quickOverlay') closeQuickModal(); });
+document.getElementById('quickAddBtn').addEventListener('click', ()=>{
+  const v = document.getElementById('quickInput').value.trim();
+  if(!v) return;
+  const d = loadQuick();
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  d.push({text:v, done:false, date:ds});
+  saveQuick(d);
+  document.getElementById('quickInput').value='';
+  renderQuickList();
+});
+document.getElementById('quickInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('quickAddBtn').click(); });
+
+/* ══════════════════════════════════════
+   CALENDAR EVENTS
+══════════════════════════════════════ */
+const CAL_KEY = 'lod2-calendar';
+const CAL_COLORS = {governance:'#15375C', regulatory:'#D98E04', internal:'#2E9E5B', deadline:'#D64545', other:'#6B7785'};
+function loadCal(){ try{ return JSON.parse(localStorage.getItem(CAL_KEY)||'[]'); }catch(e){ return []; } }
+function saveCal(d){ try{ localStorage.setItem(CAL_KEY,JSON.stringify(d)); }catch(e){} }
+
+function renderCalList(){
+  let items = loadCal();
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+  const el = document.getElementById('calList');
+  if(!items.length){ el.innerHTML='<p style="color:var(--text-muted);font-size:13px;font-style:italic;">No events yet.</p>'; return; }
+  const todayISO = toISO(TODAY);
+  el.innerHTML = items.map((ev,i)=>{
+    const past = ev.date < todayISO;
+    const col = CAL_COLORS[ev.type]||'#6B7785';
+    const d = fromISO(ev.date);
+    const dStr = d ? d.getDate()+' '+MONTHS_EN[d.getMonth()]+' '+d.getFullYear() : ev.date;
+    const dl = d ? Math.round((d-TODAY)/86400000) : null;
+    const dlStr = dl===null?'':(dl<0?Math.abs(dl)+'d ago':dl===0?'today':dl+'d');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-left:4px solid ${col};border-radius:8px;background:${past?'#F8FAFC':'#fff'};opacity:${past?0.6:1};">
+      <div style="text-align:center;min-width:42px;">
+        <div style="font-size:18px;font-weight:800;color:${col};font-family:'JetBrains Mono',monospace;line-height:1;">${d?d.getDate():'?'}</div>
+        <div style="font-size:9px;text-transform:uppercase;color:${col};letter-spacing:.05em;">${d?MONTHS_EN[d.getMonth()]:''}</div>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--navy);">${escapeHtml(ev.text)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${ev.type} ${dlStr?'&bull; '+dlStr:''}</div>
+      </div>
+      <button data-i="${i}" class="cal-del" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">x</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.cal-del').forEach(btn=>{
+    btn.addEventListener('click',()=>{ if(!confirm('Delete?')) return; const d=loadCal(); d.splice(+btn.dataset.i,1); saveCal(d); renderCalList(); });
+  });
+}
+function openCalModal(){ renderCalList(); document.getElementById('calOverlay').classList.remove('hidden'); }
+function closeCalModal(){ document.getElementById('calOverlay').classList.add('hidden'); }
+
+document.getElementById('calBtn').addEventListener('click', openCalModal);
+document.getElementById('calCloseBtn').addEventListener('click', closeCalModal);
+document.getElementById('calOverlay').addEventListener('click', e=>{ if(e.target.id==='calOverlay') closeCalModal(); });
+document.getElementById('calAddBtn').addEventListener('click', ()=>{
+  const date = document.getElementById('calDate').value;
+  const text = document.getElementById('calInput').value.trim();
+  const type = document.getElementById('calType').value;
+  if(!date||!text){ alert('Please enter both a date and a description.'); return; }
+  const d = loadCal();
+  d.push({date, text, type});
+  saveCal(d);
+  document.getElementById('calInput').value='';
+  renderCalList();
+});
+document.getElementById('calInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('calAddBtn').click(); });
+</script>
+
+<div id="rapOverlay" class="modal-overlay hidden" style="padding:0;align-items:stretch;">
+  <div style="background:#fff;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:17px;font-weight:800;color:var(--navy);">Risk Activity Plan</span>
+        <button id="rapAddBtn" style="padding:6px 14px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">+ Add activity</button>
+        <button id="rapFteReportBtn" style="padding:6px 14px;background:var(--navy);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">FTE Report</button>
+        <button id="rapBoardReportBtn" style="padding:6px 14px;background:#9B59B6;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Board Reports</button>
+        <button id="rapExportBtn" style="padding:6px 14px;background:#2E5C8A;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;" title="Download current plan as CSV">Export CSV</button>
+        <button id="rapResetBtn" style="padding:6px 14px;background:#fff;color:var(--red);border:1px solid var(--red);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;" title="Clear all done/deferred status marks">Reset status</button>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <select id="rapFilterTeam" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+          <option value="all">All teams</option>
+          <option value="roc">ROC</option>
+          <option value="frf">FRF</option>
+          <option value="cr">CR</option>
+          <option value="drr">DRR</option>
+          <option value="all_teams">Cross (ALL)</option>
+        </select>
+        <select id="rapFilterFreq" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+          <option value="all">All frequencies</option>
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Annually">Annually</option>
+          <option value="On request">On request</option>
+        </select>
+        <select id="rapView" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
+          <option value="planning">Planning view</option>
+          <option value="catalogue">Catalogue view</option>
+        </select>
+        <button class="cancel-btn" id="rapCloseBtn" style="padding:7px 16px;">Close</button>
+      </div>
+    </div>
+    <div id="rapContent" style="flex:1;overflow:auto;padding:20px;"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   RISK ACTIVITY PLAN - fully editable
+══════════════════════════════════════ */
+const RAP_KEY = 'lod2-rap-data';
+const RAP_STATUS_KEY = 'lod2-rap-status';
+let rapStatus = {}; // key: actId+'_'+month -> 'done'|'deferred'|null
+function loadRapStatus(){ try{ const r=localStorage.getItem(RAP_STATUS_KEY); if(r) rapStatus=JSON.parse(r); }catch(e){ rapStatus={}; } }
+function saveRapStatus(){ try{ localStorage.setItem(RAP_STATUS_KEY,JSON.stringify(rapStatus)); }catch(e){} }
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const ALL_COMMITTEES = ['RC','ERC','MC','DMC','AC','BoD'];
+const ALL_FREQS = ['Daily','Weekly','Monthly','Quarterly','Annually','On request','-'];
+const ALL_TEAMS_RAP = ['roc','frf','cr','drr','all_teams'];
+const TEAM_LABEL_RAP = {roc:'ROC', frf:'FRF', cr:'CR', drr:'DRR', all_teams:'ALL'};
+const FREQ_COLORS_RAP = {
+  'Daily':'#2E9E5B','Weekly':'#15375C','Monthly':'#0E6BA8',
+  'Quarterly':'#D98E04','Annually':'#9B59B6','On request':'#6B7785','-':'#B0B8C1'
+};
+const COMM_COLORS_RAP = {RC:'#15375C',ERC:'#9B59B6',MC:'#2E9E5B',DMC:'#D98E04',AC:'#D64545',BoD:'#0E6BA8'};
+
+const RAP_DEFAULT = [
+  {id:'r01',activity:'Backtest Policy',type:'EMIR BT',team:'roc',risk:'Market',freq:'Annually',emir:'art.49',fte:1,committees:['RC','ERC','BoD'],months:{Feb:['RC','ERC','AC']}},
+  {id:'r02',activity:'Stress Model Challenge',type:'Challenge',team:'roc',risk:'Market',freq:'On request',emir:'art.49',fte:1,committees:['RC','ERC','BoD'],months:{}},
+  {id:'r03',activity:'Margin Model Challenge',type:'Challenge',team:'roc',risk:'Market',freq:'On request',emir:'art.49',fte:1,committees:['RC','ERC','BoD'],months:{}},
+  {id:'r04',activity:'Concentration Monitoring (Margins/Positions)',type:'Control',team:'roc',risk:'Market',freq:'Daily',emir:'art.37,41,42,45',fte:1,committees:['RC','ERC','BoD'],months:{}},
+  {id:'r05',activity:'Monitoring Key Risk Indicators',type:'Control',team:'roc',risk:'Market',freq:'Daily',emir:'-',fte:1,committees:['RC'],months:{Jan:['RC'],Apr:['RC'],Jun:['RC'],Jul:['RC']}},
+  {id:'r06',activity:'Second level Controls on Investments',type:'Control',team:'roc',risk:'Regulatory',freq:'Daily',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r07',activity:'Instrument Backtest',type:'EMIR BT',team:'roc',risk:'Market',freq:'Daily',emir:'art.49',fte:1,committees:['RC','ERC','AC','BoD'],months:{}},
+  {id:'r08',activity:'Portfolio Back Test',type:'EMIR BT',team:'roc',risk:'Market',freq:'Daily',emir:'art.49',fte:1,committees:['RC','ERC','AC','BoD'],months:{}},
+  {id:'r09',activity:'Statistical Back Test',type:'EMIR BT',team:'roc',risk:'Market',freq:'Daily',emir:'art.49',fte:1,committees:['RC','ERC','AC','BoD'],months:{}},
+  {id:'r10',activity:'Second level controls on Settlement Prices',type:'Control',team:'roc',risk:'Market',freq:'-',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r11',activity:'AI Innovation, Maintenance and Developments',type:'AI',team:'roc',risk:'Innovation',freq:'-',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r12',activity:'Default Fund Calibration Control',type:'Control',team:'roc',risk:'Market',freq:'Monthly',emir:'art.46',fte:1,committees:[],months:{}},
+  {id:'r13',activity:'Margins Sensitivity Test',type:'EMIR ST',team:'roc',risk:'Model',freq:'Monthly',emir:'art.49',fte:1,committees:['RC','ERC','AC','BoD'],months:{Mar:['RC','ERC','AC','BoD'],Apr:['RC'],Jun:['RC','ERC','AC'],Jul:['RC'],Aug:['RC'],Sep:['RC','ERC']}},
+  {id:'r14',activity:'Reverse Stress Test',type:'EMIR RST',team:'roc',risk:'Model',freq:'Quarterly',emir:'art.49',fte:1,committees:['RC','ERC','AC','BoD'],months:{Mar:['RC','ERC','AC','BoD'],Jun:['RC','ERC','AC','BoD'],Sep:['RC','ERC']}},
+  {id:'r15',activity:'Additional Margin Calibration control',type:'Control',team:'roc',risk:'CCP Link',freq:'Quarterly',emir:'art.52',fte:1,committees:['RC'],months:{Mar:['RC'],Apr:['RC'],Jun:['RC'],Sep:['RC']}},
+  {id:'r16',activity:'AntiProciclicality Policy',type:'Control',team:'roc',risk:'Regulatory',freq:'Annually',emir:'-',fte:1,committees:['RC','BoD'],months:{}},
+  {id:'r17',activity:'Risk Presentations (IMF, S&P, etc.)',type:'Reporting',team:'roc',risk:'Regulatory',freq:'On request',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r18',activity:'Risk Journal (BoD, ERC, CS)',type:'Reporting',team:'roc',risk:'Regulatory',freq:'On request',emir:'art.52',fte:1,committees:['ERC','AC','BoD'],months:{}},
+  {id:'r19',activity:'College of Regulators',type:'Reporting',team:'roc',risk:'Regulatory',freq:'Annually',emir:'art.18,21',fte:1,committees:[],months:{}},
+  {id:'r20',activity:'KRI Challenge',type:'Challenge',team:'roc',risk:'Market',freq:'Annually',emir:'-',fte:1,committees:['RC'],months:{Aug:['RC']}},
+  {id:'r21',activity:'Investment ES (Normal & Stress Mkt Conditions)',type:'Investment',team:'frf',risk:'Investment',freq:'Daily',emir:'art.47',fte:1,committees:['RC','BoD'],months:{}},
+  {id:'r22',activity:'Liquidity Tool (Normal & Stress Mkt Conditions)',type:'Liquidity',team:'frf',risk:'Liquidity',freq:'Daily',emir:'art.44',fte:1,committees:[],months:{}},
+  {id:'r23',activity:'EACH',type:'EACH',team:'frf',risk:'Regulatory',freq:'Weekly',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r24',activity:'Collateral Policy Challenge',type:'Challenge',team:'frf',risk:'Market',freq:'Annually',emir:'art.46',fte:1,committees:['RC'],months:{}},
+  {id:'r25',activity:'Investment Policy Challenge',type:'Challenge',team:'frf',risk:'Investment',freq:'Annually',emir:'art.47',fte:1,committees:['RC'],months:{}},
+  {id:'r26',activity:'Liquidity Policy Challenge',type:'Challenge',team:'frf',risk:'Liquidity',freq:'Annually',emir:'art.44',fte:1,committees:['RC','ERC','BoD'],months:{Jun:['RC'],Jul:['RC'],Aug:['RC']}},
+  {id:'r27',activity:'Collateral Concentration Limits Assessment',type:'Control',team:'frf',risk:'Market',freq:'Annually',emir:'art.46',fte:1,committees:['RC'],months:{Jun:['RC']}},
+  {id:'r28',activity:"ERC member's update",type:'Reporting',team:'frf',risk:'Regulatory',freq:'Annually',emir:'-',fte:1,committees:['BoD'],months:{}},
+  {id:'r29',activity:'DMC participation',type:'Default',team:'drr',risk:'Default',freq:'On request',emir:'-',fte:1,committees:['DMC'],months:{}},
+  {id:'r30',activity:'Default-related activities (hedging, QP, P&L)',type:'Default',team:'drr',risk:'Default',freq:'On request',emir:'art.46',fte:1,committees:['DMC'],months:{}},
+  {id:'r31',activity:'DMP participation',type:'Default',team:'drr',risk:'Default',freq:'Weekly',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r32',activity:'DMP Liquidation Strategy',type:'Default',team:'drr',risk:'Default',freq:'Annually',emir:'-',fte:1,committees:['DMC'],months:{}},
+  {id:'r33',activity:'DMP Liquidation Plan',type:'Default',team:'drr',risk:'Default',freq:'Annually',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r34',activity:'Resolution Plan',type:'Default',team:'drr',risk:'Default',freq:'Annually',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r35',activity:'Fire drill and correlated activities',type:'Default',team:'drr',risk:'Default',freq:'Annually',emir:'-',fte:1,committees:['DMC','BoD'],months:{}},
+  {id:'r36',activity:'Auction Mandatory Participants Calculation',type:'Default',team:'drr',risk:'Default',freq:'Annually',emir:'-',fte:1,committees:['DMC'],months:{Jun:['DMC']}},
+  {id:'r37',activity:'Recovery Plan',type:'Default',team:'drr',risk:'Default',freq:'Annually',emir:'-',fte:1,committees:['DMC','ERC','AC'],months:{Jun:['ERC','DMC','AC']}},
+  {id:'r38',activity:'Initial Margins/Supervisory Capital Monitoring',type:'Credit',team:'cr',risk:'Credit',freq:'Daily',emir:'-',fte:1,committees:['RC'],months:{}},
+  {id:'r39',activity:'Clearing Member Watchlist',type:'Credit',team:'cr',risk:'Credit',freq:'Weekly',emir:'art.37,44,45,47',fte:1,committees:['RC'],months:{}},
+  {id:'r40',activity:'Sovereign Risk Framework',type:'Credit',team:'cr',risk:'Credit',freq:'Weekly',emir:'-',fte:1,committees:['RC'],months:{}},
+  {id:'r41',activity:'Internal Rating Score',type:'Credit',team:'cr',risk:'Credit',freq:'Monthly',emir:'art.37',fte:1,committees:['RC','AC','BoD'],months:{}},
+  {id:'r42',activity:'Public Entities Monitoring',type:'Credit',team:'cr',risk:'Credit',freq:'Monthly',emir:'-',fte:1,committees:['RC'],months:{}},
+  {id:'r43',activity:'Default Probability Calculation',type:'Credit',team:'cr',risk:'Credit',freq:'Monthly',emir:'-',fte:1,committees:['RC'],months:{}},
+  {id:'r44',activity:'Active Participation Membership Committee',type:'Credit',team:'cr',risk:'Credit',freq:'Monthly',emir:'-',fte:1,committees:['MC'],months:{}},
+  {id:'r45',activity:'Breach of Transparency Obligations',type:'Credit',team:'cr',risk:'Credit',freq:'Monthly',emir:'art.38',fte:1,committees:[],months:{}},
+  {id:'r46',activity:'Monitoring Capital Adequacy Requirements',type:'Credit',team:'cr',risk:'Credit',freq:'Quarterly',emir:'-',fte:1,committees:['MC'],months:{Mar:['MC'],Jun:['MC']}},
+  {id:'r47',activity:'AntiTerrorism Tool',type:'Credit',team:'cr',risk:'Credit',freq:'Quarterly',emir:'art.47',fte:1,committees:[],months:{}},
+  {id:'r48',activity:'Admission Of New Members',type:'Credit',team:'cr',risk:'Credit',freq:'On request',emir:'art.37',fte:1,committees:['MC'],months:{}},
+  {id:'r49',activity:'Credit Risk Due Diligence new entities',type:'Credit',team:'cr',risk:'Credit',freq:'On request',emir:'art.37',fte:1,committees:['RC'],months:{}},
+  {id:'r50',activity:'Membership Extension of Existing Members',type:'Credit',team:'cr',risk:'Credit',freq:'On request',emir:'-',fte:1,committees:['MC'],months:{}},
+  {id:'r51',activity:'Due Diligence on Clearing Members',type:'Credit',team:'cr',risk:'Credit',freq:'Annually',emir:'art.37',fte:1,committees:['RC'],months:{}},
+  {id:'r52',activity:'Internal Rating Model Calibration',type:'Credit',team:'cr',risk:'Credit',freq:'Annually',emir:'-',fte:1,committees:['RC'],months:{}},
+  {id:'r53',activity:'GCMs concentration risk / trading clients',type:'Credit',team:'cr',risk:'Credit',freq:'Annually',emir:'art.37',fte:1,committees:['RC'],months:{}},
+  {id:'r54',activity:'Clearing Members CCPs Exposure data Request',type:'Credit',team:'cr',risk:'Credit',freq:'Annually',emir:'art.21,35',fte:1,committees:[],months:{}},
+  {id:'r55',activity:'Credit Model Parameters Assessment',type:'Credit',team:'cr',risk:'Credit',freq:'Annually',emir:'-',fte:1,committees:['RC'],months:{}},
+  {id:'r56',activity:'EMIR Risk Assessment',type:'Cross',team:'all_teams',risk:'Regulatory',freq:'Annually',emir:'art.21',fte:1,committees:[],months:{}},
+  {id:'r57',activity:'Group Risk Interaction',type:'Cross',team:'all_teams',risk:'---',freq:'Monthly',emir:'-',fte:1,committees:[],months:{}},
+  {id:'r58',activity:'Report for the Authorities on ERC Activities',type:'Reporting',team:'all_teams',risk:'Regulatory',freq:'Annually',emir:'-',fte:1,committees:['ERC','BoD'],months:{Mar:['ERC','BoD']}},
+  {id:'r59',activity:'LOD2 Guidelines Annual Review',type:'Cross',team:'all_teams',risk:'---',freq:'Annually',emir:'-',fte:1,committees:['RC'],months:{Aug:['RC']}},
+  {id:'r60',activity:'Risk Activities Plan Update',type:'Cross',team:'all_teams',risk:'---',freq:'Annually',emir:'-',fte:1,committees:['BoD'],months:{}},
+  {id:'r61',activity:'Internal policies and procedures update',type:'Cross',team:'all_teams',risk:'---',freq:'Annually',emir:'-',fte:1,committees:['RC'],months:{Mar:['ERC']}},
+  {id:'r62',activity:'Remuneration Report',type:'Cross',team:'all_teams',risk:'---',freq:'Annually',emir:'art.26',fte:1,committees:[],months:{Mar:['BoD']}},
+];
+
+let rapData = [];
+function loadRap(){
+  try{
+    const raw = localStorage.getItem(RAP_KEY);
+    if(raw){ rapData = JSON.parse(raw); return; }
+  }catch(e){}
+  rapData = JSON.parse(JSON.stringify(RAP_DEFAULT));
+}
+function saveRap(){ try{ localStorage.setItem(RAP_KEY, JSON.stringify(rapData)); }catch(e){} }
+function nextRapId(){ return 'r'+(Date.now()%1000000); }
+
+/* ── filters ── */
+function rapFiltered(){
+  const tf = document.getElementById('rapFilterTeam').value;
+  const ff = document.getElementById('rapFilterFreq').value;
+  return rapData.filter(a=>{
+    if(tf!=='all' && a.team!==tf) return false;
+    if(ff!=='all' && a.freq!==ff) return false;
+    return true;
+  });
+}
+
+/* ── helpers ── */
+function commBadgeRap(c){
+  const col = COMM_COLORS_RAP[c]||'#6B7785';
+  return `<span style="padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700;background:${col};color:#fff;">${c}</span>`;
+}
+
+/* ════════════════════════════════
+   PLANNING VIEW
+════════════════════════════════ */
+function rapStatusKey(id, m){ return id+'_'+m; }
+function getRapStatus(id, m){ return rapStatus[rapStatusKey(id,m)]||null; }
+function setRapStatus(id, m, val){
+  const k = rapStatusKey(id,m);
+  if(rapStatus[k]===val) rapStatus[k]=null; // toggle off
+  else rapStatus[k]=val;
+  saveRapStatus();
+  renderRapPlanning();
+}
+
+function renderRapPlanning(){
+  const data = rapFiltered();
+  const currentMonth = TODAY.getMonth();
+  const freqRank = {'Daily':0,'Weekly':1,'Monthly':2,'Quarterly':3,'Annually':4,'On request':5,'-':6};
+  const nonDaily = new Set(['Weekly','Monthly','Quarterly','Annually','On request','-']);
+
+  const teamOrder = ['roc','frf','cr','drr','all_teams'];
+  // sort: team first, then frequency rank, then alphabetical
+  data.sort((a,b)=>{
+    const ta=teamOrder.indexOf(a.team), tb=teamOrder.indexOf(b.team);
+    if(ta!==tb) return ta-tb;
+    const fa=(freqRank[a.freq]??6), fb=(freqRank[b.freq]??6);
+    if(fa!==fb) return fa-fb;
+    return a.activity.localeCompare(b.activity);
+  });
+
+  let html = `<div style="overflow-x:auto;">
+  <table style="border-collapse:collapse;font-size:11px;min-width:900px;width:100%;">
+    <thead><tr>
+      <th style="padding:8px 12px;text-align:left;background:#F0F4F8;position:sticky;left:0;z-index:2;min-width:220px;color:#44607C;">Activity</th>
+      <th style="padding:8px 6px;background:#F0F4F8;color:#44607C;min-width:44px;">Team</th>
+      <th style="padding:8px 6px;background:#F0F4F8;color:#44607C;min-width:72px;">Freq.</th>
+      <th style="padding:8px 6px;background:#F0F4F8;color:#44607C;min-width:44px;text-align:center;">FTE</th>`;
+  MONTHS_SHORT.forEach((m,i)=>{
+    const cur = i===currentMonth;
+    html += `<th style="padding:6px 4px;background:${cur?'#E8F4FD':'#F0F4F8'};color:${cur?'#0E6BA8':'#44607C'};text-align:center;font-weight:${cur?800:600};min-width:52px;font-size:${cur?12:11}px;">${m}</th>`;
+  });
+  html += `<th style="padding:8px 6px;background:#F0F4F8;color:#44607C;min-width:80px;text-align:center;">Actions</th>
+    </tr></thead><tbody>`;
+
+  let lastFreq = null;
+  data.forEach((a,idx)=>{
+    const tc = TEAM_COLORS[(TEAM_LABEL_RAP[a.team]||'').toUpperCase()]||'#6B7785';
+    const fc = FREQ_COLORS_RAP[a.freq]||'#6B7785';
+    const isNonDaily = nonDaily.has(a.freq);
+    const rowBg = idx%2===0?'#fff':'#FAFCFE';
+
+    html += `<tr style="border-bottom:1px solid #EEF1F4;background:${rowBg}" id="rap-row-${a.id}">
+      <td style="padding:7px 12px;font-weight:600;color:#1A2733;position:sticky;left:0;background:${rowBg};z-index:1;">${escapeHtml(a.activity)}</td>
+      <td style="padding:7px 6px;text-align:center;"><span style="padding:1px 5px;border-radius:6px;font-size:10px;font-weight:700;background:${tc}22;color:${tc};">${TEAM_LABEL_RAP[a.team]||a.team}</span></td>
+      <td style="padding:7px 6px;text-align:center;"><span style="padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;background:${fc}22;color:${fc};border:1px solid ${fc}33;">${a.freq}</span></td>
+      <td style="padding:7px 6px;text-align:center;font-size:11px;font-weight:700;color:#15375C;">${a.fte>0?a.fte+'d':'-'}</td>`;
+
+    MONTHS_SHORT.forEach((m,mi)=>{
+      const cur = mi===currentMonth;
+      const comms = (a.months||{})[m]||[];
+      const st = getRapStatus(a.id, m);
+      // Show status buttons ONLY for non-Daily activities AND only on months with committees
+      const showStatus = isNonDaily && comms.length > 0;
+      let cellContent = '';
+
+      if(comms.length){
+        cellContent += `<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:1px;${showStatus?'margin-bottom:3px':''}">`+
+          comms.map(c=>`<span title="${c}" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${COMM_COLORS_RAP[c]||'#6B7785'};"></span>`).join('')+
+          `</div>`;
+      }
+
+      if(showStatus){
+        const isDone = st==='done';
+        const isDeferred = st==='deferred';
+        cellContent += `<div style="display:flex;justify-content:center;gap:2px;">
+          <button class="rap-status-btn" data-id="${a.id}" data-month="${m}" data-val="done"
+            style="font-size:10px;padding:1px 5px;border-radius:4px;cursor:pointer;border:1px solid ${isDone?'#2E9E5B':'#ddd'};background:${isDone?'#2E9E5B':'#fff'};color:${isDone?'#fff':'#aaa'};" title="Mark as done">&#10003;</button>
+          <button class="rap-status-btn" data-id="${a.id}" data-month="${m}" data-val="deferred"
+            style="font-size:10px;padding:1px 5px;border-radius:4px;cursor:pointer;border:1px solid ${isDeferred?'#D98E04':'#ddd'};background:${isDeferred?'#D98E04':'#fff'};color:${isDeferred?'#fff':'#aaa'};" title="Mark as deferred">&#8594;</button>
+        </div>`;
+      }
+
+      // Cell background: current month teal tint, done green, deferred amber, else plain
+      const cellBg = st==='done'?'#E8F7EF':st==='deferred'?'#FFF4E0':cur?'#E8F4FD22':'';
+      html += `<td style="padding:3px 2px;text-align:center;background:${cellBg};vertical-align:middle;">${cellContent}</td>`;
+    });
+
+    html += `<td style="padding:4px 6px;text-align:center;white-space:nowrap;">
+        <button class="rap-edit-btn" data-id="${a.id}" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:#44607C;">Edit</button>
+        <button class="rap-del-btn" data-id="${a.id}" style="font-size:11px;padding:3px 8px;border:1px solid var(--red-bg);border-radius:5px;background:var(--red-bg);cursor:pointer;color:var(--red);margin-left:3px;">Del</button>
+      </td></tr>`;
+  });
+
+  html += `</tbody></table></div>
+  <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;font-size:11px;align-items:center;">
+    ${Object.entries(COMM_COLORS_RAP).map(([c,col])=>`<span style="display:flex;align-items:center;gap:4px;"><span style="width:9px;height:9px;border-radius:50%;background:${col};display:inline-block;"></span>${c}</span>`).join('')}
+    <span style="color:var(--text-muted);margin-left:6px;">&#10003; = done &nbsp; &#8594; = deferred &nbsp; (only on non-Daily activities with scheduled committee)</span>
+    <button id="rapAddBtnInline" style="margin-left:auto;padding:6px 14px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">+ Add activity</button>
+  </div>`;
+
+  document.getElementById('rapContent').innerHTML = html;
+
+  document.querySelectorAll('.rap-status-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setRapStatus(btn.dataset.id, btn.dataset.month, btn.dataset.val));
+  });
+  document.querySelectorAll('.rap-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> openRapEditModal(btn.dataset.id));
+  });
+  document.querySelectorAll('.rap-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('Delete this activity?')) return;
+      rapData = rapData.filter(a=>a.id!==btn.dataset.id);
+      saveRap(); renderRap();
+    });
+  });
+  document.getElementById('rapAddBtnInline').addEventListener('click', ()=> openRapEditModal(null));
+}
+
+/* ════════════════════════════════
+   CATALOGUE VIEW
+════════════════════════════════ */
+function renderRapCatalogue(){
+  const data = rapFiltered();
+  const freqRank = {'Daily':0,'Weekly':1,'Monthly':2,'Quarterly':3,'Annually':4,'On request':5,'-':6};
+  const byTeam = {};
+  data.forEach(a=>{ if(!byTeam[a.team]) byTeam[a.team]=[]; byTeam[a.team].push(a); });
+  // sort each team's activities by frequency then alphabetical
+  Object.values(byTeam).forEach(arr=>{
+    arr.sort((a,b)=>{
+      const fa=freqRank[a.freq]??6, fb=freqRank[b.freq]??6;
+      if(fa!==fb) return fa-fb;
+      return a.activity.localeCompare(b.activity);
+    });
+  });
+
+  const teamOrder = ['roc','frf','cr','drr','all_teams'];
+  // fixed column widths ensure alignment is consistent across all subteam tables
+  const colStyles = [
+    'width:30%;min-width:180px;text-align:left;',  // Activity
+    'width:10%;min-width:80px;',                    // Type
+    'width:9%;min-width:70px;',                     // Risk
+    'width:10%;min-width:80px;',                    // Freq
+    'width:6%;min-width:50px;text-align:center;',   // FTE
+    'width:8%;min-width:60px;',                     // EMIR
+    'width:17%;min-width:120px;',                   // Committees
+    'width:10%;min-width:80px;text-align:center;',  // Actions
+  ];
+  const thLabels = ['Activity','Type','Risk','Freq.','FTE (d)','EMIR','Committees','Actions'];
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;">
+    <colgroup>${colStyles.map(c=>`<col style="${c}">`).join('')}</colgroup></table>`;
+
+  // use a single wrapper table with thead to pin columns, then tbody per team
+  html = '';
+  teamOrder.filter(t=>byTeam[t]).forEach(team=>{
+    const col = TEAM_COLORS[(TEAM_LABEL_RAP[team]||'').toUpperCase()]||'#6B7785';
+    const acts = byTeam[team];
+    html += `<div style="margin-bottom:28px;">
+      <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:${col};margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid ${col};">
+        ${TEAM_LABEL_RAP[team]} &mdash; <span style="font-weight:400;font-size:11px;letter-spacing:0;">${acts.length} activities</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;">
+        <colgroup>${colStyles.map(c=>`<col style="${c}">`).join('')}</colgroup>
+        <thead><tr style="background:#F0F4F8;">
+          ${thLabels.map((l,i)=>`<th style="padding:7px 10px;color:#44607C;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;${colStyles[i]}">${l}</th>`).join('')}
+        </tr></thead>
+        <tbody>`;
+    acts.forEach((a,i)=>{
+      const fc = FREQ_COLORS_RAP[a.freq]||'#6B7785';
+      html += `<tr style="border-bottom:1px solid #EEF1F4;${i%2===0?'':'background:#FAFCFE'}">
+        <td style="padding:8px 10px;font-weight:600;color:#1A2733;word-break:break-word;">${escapeHtml(a.activity)}</td>
+        <td style="padding:8px 10px;color:#44607C;word-break:break-word;">${a.type}</td>
+        <td style="padding:8px 10px;color:#44607C;word-break:break-word;">${a.risk}</td>
+        <td style="padding:8px 10px;"><span style="display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${fc}22;color:${fc};border:1px solid ${fc}44;white-space:nowrap;">${a.freq}</span></td>
+        <td style="padding:8px 10px;text-align:center;font-weight:700;color:#15375C;">${a.fte>0?a.fte+'d':'-'}</td>
+        <td style="padding:8px 10px;color:#6B7785;font-size:11px;">${a.emir}</td>
+        <td style="padding:8px 10px;">${(a.committees||[]).map(commBadgeRap).join(' ')}</td>
+        <td style="padding:8px 10px;text-align:center;white-space:nowrap;">
+          <button class="rap-edit-btn" data-id="${a.id}" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:#44607C;">Edit</button>
+          <button class="rap-del-btn" data-id="${a.id}" style="font-size:11px;padding:3px 8px;border:1px solid var(--red-bg);border-radius:5px;background:var(--red-bg);cursor:pointer;color:var(--red);margin-left:3px;">Del</button>
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  html = (html||'<p style="color:var(--text-muted);">No activities match.</p>') +
+    `<div style="margin-top:4px;"><button id="rapAddBtnInline" style="padding:7px 16px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;">+ Add activity</button></div>`;
+  document.getElementById('rapContent').innerHTML = html;
+
+  document.querySelectorAll('.rap-edit-btn').forEach(btn=>{ btn.addEventListener('click', ()=> openRapEditModal(btn.dataset.id)); });
+  document.querySelectorAll('.rap-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('Delete this activity?')) return;
+      rapData = rapData.filter(a=>a.id!==btn.dataset.id);
+      saveRap(); renderRap();
+    });
+  });
+  document.getElementById('rapAddBtnInline').addEventListener('click', ()=> openRapEditModal(null));
+}
+
+function renderRap(){
+  const view = document.getElementById('rapView').value;
+  if(view==='catalogue') renderRapCatalogue();
+  else renderRapPlanning();
+}
+
+/* ════════════════════════════════
+   EDIT / ADD MODAL
+════════════════════════════════ */
+function openRapEditModal(id){
+  const a = id ? rapData.find(x=>x.id===id) : null;
+  const title = a ? 'Edit activity' : 'Add activity';
+
+  // Build month-committee grid
+  let monthGrid = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px;">`;
+  MONTHS_SHORT.forEach(m=>{
+    const checked = a ? (a.months||{})[m]||[] : [];
+    monthGrid += `<div style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;">
+      <div style="font-size:10px;font-weight:700;color:#44607C;margin-bottom:4px;">${m}</div>
+      ${ALL_COMMITTEES.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-bottom:2px;">
+        <input type="checkbox" data-month="${m}" data-comm="${c}" class="rap-month-comm" ${checked.includes(c)?'checked':''}> ${c}
+      </label>`).join('')}
+    </div>`;
+  });
+  monthGrid += `</div>`;
+
+  const html = `<div class="modal-overlay" id="rapEditOverlay" style="z-index:2001;">
+    <div class="modal" style="max-width:720px;max-height:90vh;overflow-y:auto;">
+      <h2>${title}</h2>
+      <div class="form-grid">
+        <div class="form-field full"><label>Activity name</label>
+          <input type="text" id="re-name" value="${a?escapeHtml(a.activity):''}" placeholder="e.g. Backtest Policy"></div>
+        <div class="form-field"><label>Team</label>
+          <select id="re-team">
+            ${ALL_TEAMS_RAP.map(t=>`<option value="${t}" ${a&&a.team===t?'selected':''}>${TEAM_LABEL_RAP[t]}</option>`).join('')}
+          </select></div>
+        <div class="form-field"><label>Type</label>
+          <input type="text" id="re-type" value="${a?escapeHtml(a.type):''}" placeholder="e.g. Control, Challenge..."></div>
+        <div class="form-field"><label>Risk category</label>
+          <input type="text" id="re-risk" value="${a?escapeHtml(a.risk):''}" placeholder="e.g. Market, Credit..."></div>
+        <div class="form-field"><label>Frequency</label>
+          <select id="re-freq">
+            ${ALL_FREQS.map(f=>`<option ${a&&a.freq===f?'selected':''}>${f}</option>`).join('')}
+          </select></div>
+        <div class="form-field"><label>EMIR reference</label>
+          <input type="text" id="re-emir" value="${a?escapeHtml(a.emir):'-'}" placeholder="e.g. art.49"></div>
+        <div class="form-field"><label>FTE estimated (person-days/year)</label>
+          <input type="number" id="re-fte" value="${a?a.fte:0}" min="0" step="0.5"></div>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;font-weight:700;color:#44607C;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Committees per month (select where presented)</div>
+        ${monthGrid}
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;font-weight:700;color:#44607C;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Default committees (catalogue)</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${ALL_COMMITTEES.map(c=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" class="re-comm" value="${c}" ${a&&(a.committees||[]).includes(c)?'checked':''}> ${c}
+          </label>`).join('')}
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top:18px;">
+        <div class="left"></div>
+        <div class="right">
+          <button class="cancel-btn" id="rapEditCancelBtn">Cancel</button>
+          <button class="save-btn" id="rapEditSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', html);
+
+  document.getElementById('rapEditCancelBtn').addEventListener('click', ()=>{
+    document.getElementById('rapEditOverlay').remove();
+  });
+  document.getElementById('rapEditSaveBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('re-name').value.trim();
+    if(!name){ alert('Please enter an activity name.'); return; }
+
+    // collect months
+    const months = {};
+    document.querySelectorAll('.rap-month-comm:checked').forEach(cb=>{
+      const m = cb.dataset.month, c = cb.dataset.comm;
+      if(!months[m]) months[m]=[];
+      months[m].push(c);
+    });
+
+    // collect committees
+    const committees = Array.from(document.querySelectorAll('.re-comm:checked')).map(cb=>cb.value);
+
+    const data = {
+      id: a ? a.id : nextRapId(),
+      activity: name,
+      team: document.getElementById('re-team').value,
+      type: document.getElementById('re-type').value.trim()||'-',
+      risk: document.getElementById('re-risk').value.trim()||'-',
+      freq: document.getElementById('re-freq').value,
+      emir: document.getElementById('re-emir').value.trim()||'-',
+      fte: parseFloat(document.getElementById('re-fte').value)||0,
+      committees,
+      months
+    };
+
+    if(a){
+      const idx = rapData.findIndex(x=>x.id===a.id);
+      rapData[idx] = data;
+    } else {
+      rapData.push(data);
+    }
+    saveRap();
+    document.getElementById('rapEditOverlay').remove();
+    renderRap();
+  });
+}
+
+/* ════════════════════════════════
+   OPEN / CLOSE
+════════════════════════════════ */
+function openRapModal(){
+  loadRap();
+  loadRapStatus();
+  renderRap();
+  document.getElementById('rapOverlay').classList.remove('hidden');
+}
+function closeRapModal(){ document.getElementById('rapOverlay').classList.add('hidden'); }
+
+document.getElementById('rapBtn').addEventListener('click', openRapModal);
+document.getElementById('rapCloseBtn').addEventListener('click', closeRapModal);
+document.getElementById('rapOverlay').addEventListener('click', e=>{ if(e.target.id==='rapOverlay') closeRapModal(); });
+document.getElementById('rapFilterTeam').addEventListener('change', renderRap);
+document.getElementById('rapFilterFreq').addEventListener('change', renderRap);
+document.getElementById('rapView').addEventListener('change', renderRap);
+</script>
+
+<div id="rapFteOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:680px;">
+    <h2>RAP &mdash; FTE Report</h2>
+    <div class="report-box" id="rapFteContent"></div>
+    <div class="modal-actions">
+      <div class="left"><span style="font-size:11px;color:var(--text-muted);">Based on 220 working days = 1.0 FTE. Edit each activity to adjust FTE.</span></div>
+      <div class="right">
+        <button class="cancel-btn" id="rapFteCloseBtn">Close</button>
+        <button class="btn" id="rapFteCopyBtn">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ RAP FTE REPORT ══ */
+function buildRapFteText(){
+  const WD = 220;
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  const teamOrder = ['roc','frf','cr','drr','all_teams'];
+
+  const totalFte = rapData.reduce((s,a)=>s+(a.fte||0),0);
+  let o = '';
+  o += '================================================================\n';
+  o += 'LOD2 - RISK ACTIVITY PLAN - FTE REPORT\n';
+  o += 'Prepared by: Head of Financial and Credit Risk (LOD2)\n';
+  o += 'Date: '+ds+'\n';
+  o += 'Basis: 220 working days per year = 1.0 FTE\n';
+  o += '================================================================\n\n';
+  o += 'TOTAL LOD2\n';
+  o += '  Activities tracked:  '+rapData.length+'\n';
+  o += '  Total effort:        '+totalFte.toFixed(1)+' person-days/year  ->  '+(totalFte/WD).toFixed(2)+' FTE\n\n';
+  o += '----------------------------------------------------------------\n';
+  o += 'BY TEAM\n\n';
+
+  teamOrder.forEach(team=>{
+    const acts = rapData.filter(a=>a.team===team);
+    if(!acts.length) return;
+    const label = TEAM_LABEL_RAP[team]||team;
+    const fte = acts.reduce((s,a)=>s+(a.fte||0),0);
+    const byFreq = {};
+    acts.forEach(a=>{ if(!byFreq[a.freq]) byFreq[a.freq]=[]; byFreq[a.freq].push(a); });
+    o += 'Team: '+label+'\n';
+    o += '  Activities: '+acts.length+'\n';
+    o += '  Total effort: '+fte.toFixed(1)+'d/year  ->  '+(fte/WD).toFixed(2)+' FTE\n';
+    o += '  Breakdown by frequency:\n';
+    ['Daily','Weekly','Monthly','Quarterly','Annually','On request','-'].forEach(freq=>{
+      const fa = byFreq[freq];
+      if(!fa) return;
+      const fe = fa.reduce((s,a)=>s+(a.fte||0),0);
+      o += '    '+freq+' ('+fa.length+' activities, '+fe.toFixed(1)+'d):\n';
+      fa.forEach(a=>{ o += '      - '+a.activity+(a.fte>0?' ['+a.fte+'d]':'')+'\n'; });
+    });
+    o += '\n';
+  });
+
+  const noFte = rapData.filter(a=>!a.fte||a.fte===0);
+  if(noFte.length){
+    o += '----------------------------------------------------------------\n';
+    o += 'NOTE: '+noFte.length+' activity(ies) have no FTE estimate entered.\n';
+    noFte.forEach(a=>{ o += '  - ['+TEAM_LABEL_RAP[a.team]+'] '+a.activity+'\n'; });
+  }
+  return o.trim()+'\n';
+}
+
+function openRapFteModal(){
+  document.getElementById('rapFteContent').textContent = buildRapFteText();
+  document.getElementById('rapFteOverlay').classList.remove('hidden');
+}
+function closeRapFteModal(){ document.getElementById('rapFteOverlay').classList.add('hidden'); }
+
+document.getElementById('rapFteReportBtn').addEventListener('click', openRapFteModal);
+document.getElementById('rapFteCloseBtn').addEventListener('click', closeRapFteModal);
+document.getElementById('rapFteOverlay').addEventListener('click', e=>{ if(e.target.id==='rapFteOverlay') closeRapFteModal(); });
+document.getElementById('rapFteCopyBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('rapFteContent').textContent;
+  const btn = document.getElementById('rapFteCopyBtn');
+  try{
+    await navigator.clipboard.writeText(text);
+    const orig = btn.textContent; btn.textContent='Copied!';
+    setTimeout(()=>{ btn.textContent=orig; },1500);
+  }catch(e){ alert('Select text and copy manually.'); }
+});
+
+document.getElementById('rapAddBtn').addEventListener('click', ()=> openRapEditModal(null));
+</script>
+
+<div id="rapBoardOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:700px;">
+    <h2 id="rapBoardTitle">Board Report</h2>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button id="rapBoardDoneBtn" style="padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid #2E9E5B;background:#2E9E5B;color:#fff;">Activities completed (current year)</button>
+      <button id="rapBoardPlanBtn" style="padding:7px 16px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid #9B59B6;background:#fff;color:#9B59B6;">Plan for next year</button>
+    </div>
+    <div class="report-box" id="rapBoardContent"></div>
+    <div class="modal-actions">
+      <div class="left"><span style="font-size:11px;color:var(--text-muted);">Ready to copy and paste into board papers.</span></div>
+      <div class="right">
+        <button class="cancel-btn" id="rapBoardCloseBtn">Close</button>
+        <button class="btn" id="rapBoardCopyBtn">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ BOARD REPORTS ══ */
+let rapBoardMode = 'done';
+
+function buildRapDoneReport(){
+  const year = TODAY.getFullYear();
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+year;
+  const WD = 220;
+  let o = '';
+  o += '================================================================\n';
+  o += 'LOD2 - RISK ACTIVITIES COMPLETED - '+year+'\n';
+  o += 'Prepared by: Head of Financial and Credit Risk (LOD2)\n';
+  o += 'Date: '+ds+'\n';
+  o += '================================================================\n\n';
+
+  const teamOrder = ['roc','frf','cr','drr','all_teams'];
+  let grandTotal = 0, grandFte = 0;
+
+  teamOrder.forEach(team=>{
+    const acts = rapData.filter(a=>a.team===team);
+    if(!acts.length) return;
+    const label = TEAM_LABEL_RAP[team]||team;
+    const doneActs = [];
+    acts.forEach(a=>{
+      const doneMon = MONTHS_SHORT.filter(m=> getRapStatus(a.id,m)==='done');
+      if(doneMon.length) doneActs.push({a, doneMon});
+    });
+    if(!doneActs.length) return;
+    const teamFte = doneActs.reduce((s,x)=>s+(x.a.fte||0),0);
+    o += 'Team: '+label+'\n';
+    o += '  Activities delivered: '+doneActs.length+'  |  Effort: '+teamFte.toFixed(1)+'d  ->  '+(teamFte/WD).toFixed(2)+' FTE\n';
+    doneActs.forEach(({a, doneMon})=>{
+      const commsAll = doneMon.flatMap(m=>(a.months||{})[m]||[]);
+      const uniqComms = [...new Set(commsAll)];
+      o += '  - '+a.activity+'\n';
+      o += '    Months: '+doneMon.join(', ')+(uniqComms.length?' | Presented to: '+uniqComms.join(', '):'')+(a.fte?' | Effort: '+a.fte+'d':'')+'\n';
+    });
+    o += '\n';
+    grandTotal += doneActs.length;
+    grandFte += teamFte;
+  });
+
+  o += '================================================================\n';
+  o += 'SUMMARY\n';
+  o += '  Total activities completed: '+grandTotal+'\n';
+  o += '  Total effort delivered:     '+grandFte.toFixed(1)+'d  ->  '+(grandFte/WD).toFixed(2)+' FTE\n';
+  return o.trim()+'\n';
+}
+
+function buildRapPlanReport(){
+  const nextYear = TODAY.getFullYear()+1;
+  const ds = TODAY.getDate()+' '+MONTHS_EN[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  const WD = 220;
+  let o = '';
+  o += '================================================================\n';
+  o += 'LOD2 - RISK ACTIVITY PLAN - '+nextYear+'\n';
+  o += 'Prepared by: Head of Financial and Credit Risk (LOD2)\n';
+  o += 'Date: '+ds+'\n';
+  o += '================================================================\n\n';
+  o += 'This document presents the planned risk activities for '+nextYear+',\n';
+  o += 'including frequency, responsible team, and estimated effort.\n\n';
+
+  const teamOrder = ['roc','frf','cr','drr','all_teams'];
+  let grandTotal = 0, grandFte = 0;
+
+  teamOrder.forEach(team=>{
+    const acts = rapData.filter(a=>a.team===team);
+    if(!acts.length) return;
+    const label = TEAM_LABEL_RAP[team]||team;
+    const teamFte = acts.reduce((s,a)=>s+(a.fte||0),0);
+    o += '----------------------------------------------------------------\n';
+    o += 'Team: '+label+'  ('+acts.length+' activities  |  '+teamFte.toFixed(1)+'d/year  ->  '+(teamFte/WD).toFixed(2)+' FTE)\n\n';
+
+    // Group by frequency
+    const freqOrder = ['Daily','Weekly','Monthly','Quarterly','Annually','On request','-'];
+    const byFreq = {};
+    acts.forEach(a=>{ if(!byFreq[a.freq]) byFreq[a.freq]=[]; byFreq[a.freq].push(a); });
+    freqOrder.filter(f=>byFreq[f]).forEach(freq=>{
+      o += '  '+freq+':\n';
+      byFreq[freq].forEach(a=>{
+        const planMon = Object.keys(a.months||{}).filter(m=>(a.months[m]||[]).length>0);
+        const commsAll = planMon.flatMap(m=>a.months[m]);
+        const uniqComms = [...new Set(commsAll)];
+        o += '    - '+a.activity;
+        if(a.fte) o += ' ['+a.fte+'d]';
+        if(planMon.length) o += '\n      Scheduled: '+planMon.join(', ')+(uniqComms.length?' | Committees: '+uniqComms.join(', '):'');
+        if(a.emir&&a.emir!=='-') o += '\n      EMIR: '+a.emir;
+        o += '\n';
+      });
+      o += '\n';
+    });
+    grandTotal += acts.length;
+    grandFte += teamFte;
+  });
+
+  o += '================================================================\n';
+  o += 'SUMMARY\n';
+  o += '  Total planned activities: '+grandTotal+'\n';
+  o += '  Total estimated effort:   '+grandFte.toFixed(1)+'d/year  ->  '+(grandFte/WD).toFixed(2)+' FTE\n';
+  return o.trim()+'\n';
+}
+
+function renderRapBoardReport(){
+  const text = rapBoardMode==='done' ? buildRapDoneReport() : buildRapPlanReport();
+  document.getElementById('rapBoardContent').textContent = text;
+  document.getElementById('rapBoardTitle').textContent = rapBoardMode==='done'
+    ? 'Activities completed - '+TODAY.getFullYear()
+    : 'Plan for '+( TODAY.getFullYear()+1);
+  document.getElementById('rapBoardDoneBtn').style.background = rapBoardMode==='done'?'#2E9E5B':'#fff';
+  document.getElementById('rapBoardDoneBtn').style.color = rapBoardMode==='done'?'#fff':'#2E9E5B';
+  document.getElementById('rapBoardPlanBtn').style.background = rapBoardMode==='plan'?'#9B59B6':'#fff';
+  document.getElementById('rapBoardPlanBtn').style.color = rapBoardMode==='plan'?'#fff':'#9B59B6';
+}
+
+function openRapBoardModal(){
+  rapBoardMode='done';
+  renderRapBoardReport();
+  document.getElementById('rapBoardOverlay').classList.remove('hidden');
+}
+function closeRapBoardModal(){ document.getElementById('rapBoardOverlay').classList.add('hidden'); }
+
+document.getElementById('rapBoardReportBtn').addEventListener('click', openRapBoardModal);
+document.getElementById('rapBoardCloseBtn').addEventListener('click', closeRapBoardModal);
+document.getElementById('rapBoardOverlay').addEventListener('click', e=>{ if(e.target.id==='rapBoardOverlay') closeRapBoardModal(); });
+document.getElementById('rapBoardDoneBtn').addEventListener('click', ()=>{ rapBoardMode='done'; renderRapBoardReport(); });
+document.getElementById('rapBoardPlanBtn').addEventListener('click', ()=>{ rapBoardMode='plan'; renderRapBoardReport(); });
+document.getElementById('rapBoardCopyBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('rapBoardContent').textContent;
+  const btn = document.getElementById('rapBoardCopyBtn');
+  try{
+    await navigator.clipboard.writeText(text);
+    const orig=btn.textContent; btn.textContent='Copied!';
+    setTimeout(()=>{ btn.textContent=orig; },1500);
+  }catch(e){ alert('Select text and copy manually.'); }
+});
+</script>
+
+<script>
+/* ══ RAP EXPORT CSV ══ */
+function exportRapCSV(){
+  const esc = v => {
+    const str = String(v==null?'':v).replace(/"/g,'""');
+    return str.includes(',') || str.includes('"') || str.includes('\n') ? '"'+str+'"' : str;
+  };
+  const headers = ['Activity','Team','Type','Risk','Frequency','EMIR','FTE (d)','Committees',
+    ...MONTHS_SHORT.map(m=>m+' Committees'),
+    ...MONTHS_SHORT.map(m=>m+' Status')
+  ];
+  const rows = rapData.map(a=>{
+    const base = [a.activity, TEAM_LABEL_RAP[a.team]||a.team, a.type, a.risk, a.freq, a.emir, a.fte||0, (a.committees||[]).join('; ')];
+    const monthComms = MONTHS_SHORT.map(m=>((a.months||{})[m]||[]).join('; '));
+    const monthStatus = MONTHS_SHORT.map(m=>getRapStatus(a.id,m)||'');
+    return [...base, ...monthComms, ...monthStatus].map(esc).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'LOD2_RiskActivityPlan_'+TODAY.getFullYear()+'.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ══ RAP RESET STATUS ══ */
+function resetRapStatus(){
+  const count = Object.keys(rapStatus).length;
+  if(!count){ alert('No status marks to reset.'); return; }
+  if(!confirm('This will clear all '+count+' done/deferred marks across all activities and months. This cannot be undone.\n\nAre you sure you want to proceed?')) return;
+  rapStatus = {};
+  saveRapStatus();
+  renderRap();
+}
+
+document.getElementById('rapExportBtn').addEventListener('click', exportRapCSV);
+document.getElementById('rapResetBtn').addEventListener('click', resetRapStatus);
+</script>
+</body>
+
+<style id="lod2UxEnhancementStyles">
+  :root{
+    --ux-shadow:0 10px 30px rgba(14,42,71,.08);
+    --ux-soft:#F7FAFD;
+    --ux-soft-navy:#EEF4FA;
+    --ux-focus:#0E6BA8;
+  }
+
+  .ux-panel{
+    margin:12px 28px 0 28px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .ux-insights{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .ux-card{
+    text-align:left;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px 14px;
+    min-height:86px;
+    box-shadow:var(--ux-shadow);
+    cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
+
+  .ux-card:hover{
+    transform:translateY(-1px);
+    border-color:var(--teal);
+    box-shadow:0 12px 32px rgba(14,42,71,.11);
+  }
+
+  .ux-card:focus-visible,
+  .ux-mini-btn:focus-visible,
+  .toolbar button:focus-visible,
+  .toolbar input:focus-visible,
+  .toolbar select:focus-visible{
+    outline:3px solid rgba(31,138,140,.22);
+    outline-offset:2px;
+  }
+
+  .ux-card-label{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-weight:800;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+
+  .ux-card-number{
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    line-height:1.1;
+    font-weight:800;
+    color:var(--navy);
+  }
+
+  .ux-card-title{
+    font-size:13px;
+    line-height:1.35;
+    font-weight:700;
+    color:var(--navy);
+    margin-top:4px;
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+
+  .ux-card-detail{
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin-top:4px;
+    line-height:1.35;
+  }
+
+  .ux-card.red{
+    border-left:5px solid var(--red);
+  }
+
+  .ux-card.amber{
+    border-left:5px solid var(--amber);
+  }
+
+  .ux-card.green{
+    border-left:5px solid var(--green);
+  }
+
+  .ux-card.teal{
+    border-left:5px solid var(--teal);
+  }
+
+  .ux-filterbar{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    box-shadow:var(--ux-shadow);
+  }
+
+  .ux-active-filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center;
+    min-height:28px;
+  }
+
+  .ux-muted-text{
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  .ux-filter-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 9px;
+    border-radius:999px;
+    background:var(--ux-soft-navy);
+    color:var(--navy);
+    font-size:11.5px;
+    font-weight:700;
+    border:1px solid rgba(14,42,71,.08);
+  }
+
+  .ux-filter-chip button{
+    border:none;
+    background:transparent;
+    color:var(--steel);
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+    padding:0;
+  }
+
+  .ux-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    justify-content:flex-end;
+  }
+
+  .ux-mini-btn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--steel);
+    padding:7px 10px;
+    border-radius:8px;
+    font-size:12px;
+    cursor:pointer;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .ux-mini-btn:hover{
+    border-color:var(--teal);
+    color:var(--teal);
+  }
+
+  .ux-mini-btn.primary{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+
+  .ux-mini-btn.primary:hover{
+    background:var(--navy-2);
+    border-color:var(--navy-2);
+    color:#fff;
+  }
+
+  .ux-mini-btn.active{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+  }
+
+  .ux-health-line{
+    margin:6px 28px 0 28px;
+    font-size:11.5px;
+    color:var(--text-muted);
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .ux-health-line strong{
+    color:var(--navy);
+  }
+
+  .table-wrap table thead th{
+    position:sticky;
+    top:0;
+    z-index:6;
+  }
+
+  .table-wrap table thead th:first-child{
+    left:0;
+    z-index:8;
+    background:#F8FAFC;
+  }
+
+  .table-wrap table tbody td:first-child{
+    position:sticky;
+    left:0;
+    z-index:4;
+    background:#fff;
+    box-shadow:2px 0 0 rgba(225,231,237,.55);
+  }
+
+  .table-wrap table tbody tr:hover td:first-child{
+    background:#FAFCFE;
+  }
+
+  tbody tr.ux-row-overdue td{
+    background:linear-gradient(90deg, rgba(214,69,69,.08), transparent 70%);
+  }
+
+  tbody tr.ux-row-overdue td:first-child{
+    border-left:4px solid var(--red);
+  }
+
+  tbody tr.ux-row-due-soon td:first-child{
+    border-left:4px solid var(--amber);
+  }
+
+  tbody tr.ux-row-red td:first-child{
+    box-shadow:inset 4px 0 0 var(--red), 2px 0 0 rgba(225,231,237,.55);
+  }
+
+  tbody tr.ux-row-amber td:first-child{
+    box-shadow:inset 4px 0 0 var(--amber), 2px 0 0 rgba(225,231,237,.55);
+  }
+
+  .ux-row-note{
+    margin-top:4px;
+    font-size:10.5px;
+    color:var(--text-muted);
+    font-weight:500;
+    line-height:1.3;
+  }
+
+  .ux-risk-token{
+    display:inline-block;
+    padding:2px 6px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:800;
+    margin-right:5px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+
+  .ux-risk-token.red{
+    color:var(--red);
+    background:var(--red-bg);
+  }
+
+  .ux-risk-token.amber{
+    color:var(--amber);
+    background:var(--amber-bg);
+  }
+
+  .ux-risk-token.green{
+    color:var(--green);
+    background:var(--green-bg);
+  }
+
+  body.ux-compact .header{
+    padding:14px 24px;
+  }
+
+  body.ux-compact .radar-section,
+  body.ux-compact .toolbar,
+  body.ux-compact .ux-panel,
+  body.ux-compact .content{
+    margin-left:20px;
+    margin-right:20px;
+  }
+
+  body.ux-compact tbody td{
+    padding:6px 10px;
+  }
+
+  body.ux-compact thead th{
+    padding:8px 10px;
+  }
+
+  body.ux-compact .board-card{
+    padding:8px;
+    margin-bottom:6px;
+  }
+
+  body.ux-compact .ux-card{
+    min-height:72px;
+    padding:10px 12px;
+  }
+
+  body.ux-compact .ux-card-number{
+    font-size:19px;
+  }
+
+  .ux-help-list{
+    margin:0;
+    padding-left:18px;
+    color:var(--text);
+    font-size:13px;
+    line-height:1.55;
+  }
+
+  .ux-help-list li{
+    margin-bottom:7px;
+  }
+
+  .ux-kbd{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    padding:2px 5px;
+    border:1px solid var(--border);
+    border-radius:5px;
+    background:#F8FAFC;
+    color:var(--navy);
+  }
+
+  .ux-screen-reader{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+
+  @media (max-width:1100px){
+    .ux-insights{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+    .ux-filterbar{
+      align-items:flex-start;
+      flex-direction:column;
+    }
+    .ux-actions{
+      justify-content:flex-start;
+    }
+  }
+
+  @media (max-width:640px){
+    .ux-panel{
+      margin-left:14px;
+      margin-right:14px;
+    }
+    .ux-insights{
+      grid-template-columns:1fr;
+    }
+    .ux-card{
+      min-height:auto;
+    }
+    .ux-health-line{
+      margin-left:14px;
+      margin-right:14px;
+    }
+  }
+
+  @media print{
+    .toolbar,
+    .radar-section,
+    .ux-filterbar,
+    .footer-note,
+    .modal-overlay{
+      display:none !important;
+    }
+    .header{
+      border-radius:0;
+      background:#fff !important;
+      color:#000 !important;
+      border-bottom:1px solid #ccc;
+    }
+    .header-sub,
+    .chip-label{
+      color:#444 !important;
+    }
+    .chip{
+      border-color:#ccc !important;
+      background:#fff !important;
+      color:#000 !important;
+    }
+    body{
+      background:#fff !important;
+    }
+    .content,
+    .ux-panel{
+      margin:12px !important;
+    }
+    .table-wrap{
+      border:none;
+      overflow:visible;
+    }
+    table{
+      min-width:0;
+      font-size:10px;
+    }
+  }
+</style>
+
+<script id="lod2UxEnhancementScript">
+(function(){
+  'use strict';
+
+  const UX_PREF_KEY = 'lod2-cockpit-ux-preferences-v1';
+  let prefs = loadPrefs();
+  let lastAttentionTaskId = null;
+  let lastNextTaskId = null;
+
+  function loadPrefs(){
+    try{
+      return JSON.parse(localStorage.getItem(UX_PREF_KEY) || '{"compact":false}');
+    }catch(e){
+      return {compact:false};
+    }
+  }
+
+  function savePrefs(){
+    try{
+      localStorage.setItem(UX_PREF_KEY, JSON.stringify(prefs));
+    }catch(e){}
+  }
+
+  function bootUx(){
+    if(!document.querySelector('.toolbar') || typeof tasks === 'undefined' || typeof state === 'undefined'){
+      setTimeout(bootUx, 80);
+      return;
+    }
+
+    normaliseVisibleLabels();
+    injectUxPanel();
+    injectHealthLine();
+    wireUxEvents();
+    wireGlobalShortcuts();
+
+    if(prefs.compact){
+      document.body.classList.add('ux-compact');
+    }
+
+    setTimeout(updateUxLayer, 120);
+    setInterval(updateUxLayer, 1500);
+  }
+
+  function normaliseVisibleLabels(){
+    const radarTitle = document.querySelector('.radar-title');
+    if(radarTitle){
+      radarTitle.textContent = 'Deadline radar - click a month to filter';
+    }
+
+    const labels = [
+      ['reportOverlay h2','Weekly status report - for the CRO'],
+      ['fteOverlay h2','FTE Report - Annual effort by team'],
+      ['ganttOverlay span','Gantt - Task timeline'],
+      ['rapFteOverlay h2','RAP - FTE Report']
+    ];
+
+    labels.forEach(([selector, text])=>{
+      const el = document.querySelector(selector);
+      if(el && el.textContent.indexOf('—') >= 0){
+        el.textContent = text;
+      }
+    });
+  }
+
+  function injectUxPanel(){
+    if(document.getElementById('uxPanel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'uxPanel';
+    panel.className = 'ux-panel';
+    panel.innerHTML = `
+      <div class="ux-insights" aria-label="Executive task insights">
+        <button class="ux-card red" id="uxImmediateCard" type="button">
+          <div class="ux-card-label">Immediate attention</div>
+          <div class="ux-card-number" id="uxImmediateNum">0</div>
+          <div class="ux-card-title" id="uxImmediateTitle">No critical item detected</div>
+          <div class="ux-card-detail" id="uxImmediateDetail">Open tasks are within current tolerance.</div>
+        </button>
+        <button class="ux-card amber" id="uxNextCard" type="button">
+          <div class="ux-card-label">Next deadline</div>
+          <div class="ux-card-number" id="uxNextNum">TBD</div>
+          <div class="ux-card-title" id="uxNextTitle">No dated open task</div>
+          <div class="ux-card-detail" id="uxNextDetail">Add due dates to improve planning quality.</div>
+        </button>
+        <button class="ux-card teal" id="uxOwnerCard" type="button">
+          <div class="ux-card-label">Owner load</div>
+          <div class="ux-card-number" id="uxOwnerNum">0</div>
+          <div class="ux-card-title" id="uxOwnerTitle">No owner concentration</div>
+          <div class="ux-card-detail" id="uxOwnerDetail">Open tasks are broadly distributed.</div>
+        </button>
+        <button class="ux-card green" id="uxQualityCard" type="button">
+          <div class="ux-card-label">Data quality</div>
+          <div class="ux-card-number" id="uxQualityNum">0</div>
+          <div class="ux-card-title" id="uxQualityTitle">No data gap detected</div>
+          <div class="ux-card-detail" id="uxQualityDetail">Owner and due date fields are complete.</div>
+        </button>
+      </div>
+      <div class="ux-filterbar">
+        <div class="ux-active-filters" id="uxActiveFilters">
+          <span class="ux-muted-text">No active lens.</span>
+        </div>
+        <div class="ux-actions">
+          <button class="ux-mini-btn primary" id="uxSortRiskBtn" type="button">Sort by urgency</button>
+          <button class="ux-mini-btn" id="uxOpenOnlyBtn" type="button">Open items</button>
+          <button class="ux-mini-btn" id="uxCompactBtn" type="button">Compact view</button>
+          <button class="ux-mini-btn" id="uxBackupBtn" type="button">Backup data</button>
+          <button class="ux-mini-btn" id="uxPrintBtn" type="button">Print view</button>
+          <button class="ux-mini-btn" id="uxHelpBtn" type="button">Help</button>
+        </div>
+      </div>`;
+
+    const toolbar = document.querySelector('.toolbar');
+    toolbar.insertAdjacentElement('afterend', panel);
+  }
+
+  function injectHealthLine(){
+    if(document.getElementById('uxHealthLine')) return;
+    const line = document.createElement('div');
+    line.id = 'uxHealthLine';
+    line.className = 'ux-health-line';
+    line.innerHTML = `
+      <span id="uxHealthSummary">Portfolio health is being calculated.</span>
+      <span>Shortcuts: <span class="ux-kbd">/</span> search, <span class="ux-kbd">Esc</span> close modal, <span class="ux-kbd">Ctrl</span> + <span class="ux-kbd">B</span> switch view.</span>`;
+    const content = document.querySelector('.content');
+    if(content) content.insertAdjacentElement('beforebegin', line);
+  }
+
+  function wireUxEvents(){
+    const byId = id => document.getElementById(id);
+
+    byId('uxSortRiskBtn').addEventListener('click', ()=>{
+      state.hideCompleted = true;
+      state.radarMonth = 'all';
+      state.sortKey = 'daysLeft';
+      state.sortAsc = true;
+      syncControlsFromState();
+      render();
+      setTimeout(scrollToFirstRiskRow, 100);
+    });
+
+    byId('uxOpenOnlyBtn').addEventListener('click', ()=>{
+      state.hideCompleted = true;
+      state.status = 'all';
+      state.radarMonth = 'all';
+      syncControlsFromState();
+      render();
+    });
+
+    byId('uxCompactBtn').addEventListener('click', ()=>{
+      prefs.compact = !prefs.compact;
+      document.body.classList.toggle('ux-compact', prefs.compact);
+      savePrefs();
+      updateUxLayer();
+    });
+
+    byId('uxBackupBtn').addEventListener('click', downloadBackup);
+    byId('uxPrintBtn').addEventListener('click', ()=> window.print());
+    byId('uxHelpBtn').addEventListener('click', openUxHelp);
+
+    byId('uxImmediateCard').addEventListener('click', ()=>{
+      if(lastAttentionTaskId) openModal(lastAttentionTaskId);
+      else focusSearch();
+    });
+
+    byId('uxNextCard').addEventListener('click', ()=>{
+      if(lastNextTaskId) openModal(lastNextTaskId);
+      else focusSearch();
+    });
+
+    byId('uxOwnerCard').addEventListener('click', ()=>{
+      const ownerName = byId('uxOwnerTitle').dataset.owner;
+      if(ownerName){
+        state.owner = ownerName;
+        state.hideCompleted = true;
+        syncControlsFromState();
+        render();
+      }
+    });
+
+    byId('uxQualityCard').addEventListener('click', ()=>{
+      state.hideCompleted = false;
+      state.sortKey = 'due';
+      state.sortAsc = true;
+      syncControlsFromState();
+      render();
+      alert('Data quality check: review tasks with missing due date, missing owner or incomplete actual effort for completed tasks.');
+    });
+
+    document.addEventListener('input', scheduleUxUpdate, true);
+    document.addEventListener('change', scheduleUxUpdate, true);
+    document.addEventListener('click', scheduleUxUpdate, true);
+  }
+
+  function wireGlobalShortcuts(){
+    document.addEventListener('keydown', function(e){
+      const active = document.activeElement;
+      const isTyping = active && ['INPUT','TEXTAREA','SELECT'].includes(active.tagName);
+
+      if(e.key === '/' && !isTyping){
+        e.preventDefault();
+        focusSearch();
+        return;
+      }
+
+      if(e.key === 'Escape'){
+        closeTopModal();
+        return;
+      }
+
+      if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b'){
+        e.preventDefault();
+        if(state.view === 'table'){
+          document.getElementById('btnBoard').click();
+        }else{
+          document.getElementById('btnTable').click();
+        }
+      }
+    });
+  }
+
+  let uxUpdateTimer = null;
+  function scheduleUxUpdate(){
+    clearTimeout(uxUpdateTimer);
+    uxUpdateTimer = setTimeout(updateUxLayer, 80);
+  }
+
+  function updateUxLayer(){
+    if(typeof tasks === 'undefined' || !Array.isArray(tasks)) return;
+
+    updateInsightCards();
+    updateActiveFilterChips();
+    enhanceCurrentRows();
+    updateCompactButton();
+    updateHealthLine();
+    normaliseVisibleLabels();
+  }
+
+  function updateInsightCards(){
+    const open = tasks.filter(t => t.status !== 'Completed');
+    const overdue = open.filter(t => {
+      const dl = daysLeft(t);
+      return dl !== null && dl < 0;
+    });
+
+    const dueSoon = open.filter(t => {
+      const dl = daysLeft(t);
+      return dl !== null && dl >= 0 && dl <= 14;
+    });
+
+    const red = open.filter(t => t.rag === 'Red');
+    const amber = open.filter(t => t.rag === 'Amber');
+
+    const attention = open.slice().sort((a,b)=>{
+      const sa = severityScore(a);
+      const sb = severityScore(b);
+      if(sa !== sb) return sb - sa;
+      const da = daysLeft(a);
+      const db = daysLeft(b);
+      return (da === null ? 99999 : da) - (db === null ? 99999 : db);
+    })[0];
+
+    const immediateCount = overdue.length + red.length + amber.filter(t => t.priority === 'Critical' || t.priority === 'High').length;
+    lastAttentionTaskId = attention ? attention.id : null;
+
+    setText('uxImmediateNum', String(immediateCount));
+    if(attention && immediateCount > 0){
+      setText('uxImmediateTitle', attention.task);
+      setText('uxImmediateDetail', '[' + attention.team + '] ' + attention.rag + ' / ' + attention.priority + ' / due ' + fmtDate(attention));
+    }else{
+      setText('uxImmediateTitle', 'No critical item detected');
+      setText('uxImmediateDetail', overdue.length + ' overdue, ' + red.length + ' red, ' + dueSoon.length + ' due in 14 days.');
+    }
+
+    const next = open
+      .filter(t => dueDateOf(t))
+      .sort((a,b)=> dueDateOf(a) - dueDateOf(b))[0];
+
+    lastNextTaskId = next ? next.id : null;
+
+    if(next){
+      const dl = daysLeft(next);
+      setText('uxNextNum', dl === 0 ? 'Today' : (dl < 0 ? Math.abs(dl) + 'd late' : dl + 'd'));
+      setText('uxNextTitle', next.task);
+      setText('uxNextDetail', '[' + next.team + '] ' + fmtDate(next) + ' / ' + next.status + ' / ' + next.rag);
+    }else{
+      setText('uxNextNum', 'TBD');
+      setText('uxNextTitle', 'No dated open task');
+      setText('uxNextDetail', 'Add due dates to improve planning quality.');
+    }
+
+    const ownerLoad = ownerConcentration(open);
+    const ownerTitle = document.getElementById('uxOwnerTitle');
+    if(ownerLoad.length){
+      const top = ownerLoad[0];
+      setText('uxOwnerNum', String(top.count));
+      setText('uxOwnerTitle', top.owner);
+      ownerTitle.dataset.owner = top.owner;
+      setText('uxOwnerDetail', ownerLoad.slice(0,3).map(x => x.owner + ': ' + x.count).join(' | '));
+    }else{
+      setText('uxOwnerNum', '0');
+      setText('uxOwnerTitle', 'No owner concentration');
+      ownerTitle.dataset.owner = '';
+      setText('uxOwnerDetail', 'Open tasks are broadly distributed.');
+    }
+
+    const missingDue = tasks.filter(t => !t.dueISO).length;
+    const missingOwner = tasks.filter(t => !ownerList(t).length).length;
+    const completedWithoutActual = tasks.filter(t => t.status === 'Completed' && (t.actual === null || t.actual === undefined || t.actual === '')).length;
+    const qualityGaps = missingDue + missingOwner + completedWithoutActual;
+
+    setText('uxQualityNum', String(qualityGaps));
+    if(qualityGaps){
+      setText('uxQualityTitle', 'Review data completeness');
+      setText('uxQualityDetail', missingDue + ' without due date, ' + missingOwner + ' without owner, ' + completedWithoutActual + ' completed without actual effort.');
+    }else{
+      setText('uxQualityTitle', 'No data gap detected');
+      setText('uxQualityDetail', 'Owner, due date and actual effort fields are complete.');
+    }
+  }
+
+  function updateActiveFilterChips(){
+    const container = document.getElementById('uxActiveFilters');
+    if(!container) return;
+
+    const chips = [];
+    if(state.search) chips.push({key:'search', label:'Search: ' + state.search});
+    if(state.team !== 'all') chips.push({key:'team', label:'Team: ' + state.team});
+    if(state.priority !== 'all') chips.push({key:'priority', label:'Priority: ' + state.priority});
+    if(state.status !== 'all') chips.push({key:'status', label:'Status: ' + state.status});
+    if(state.rag !== 'all') chips.push({key:'rag', label:'RAG: ' + state.rag});
+    if(state.owner !== 'all') chips.push({key:'owner', label:'Owner: ' + state.owner});
+    if(state.hideCompleted) chips.push({key:'hideCompleted', label:'Completed hidden'});
+    if(state.radarMonth !== 'all') chips.push({key:'radarMonth', label:'Radar: ' + safeMonthLabel(state.radarMonth)});
+
+    if(!chips.length){
+      container.innerHTML = '<span class="ux-muted-text">No active lens.</span>';
+      return;
+    }
+
+    container.innerHTML = chips.map(c =>
+      '<span class="ux-filter-chip">' + escapeHtml(c.label) +
+      ' <button type="button" data-ux-clear="' + c.key + '" aria-label="Clear ' + escapeHtml(c.label) + '">x</button></span>'
+    ).join('');
+
+    container.querySelectorAll('[data-ux-clear]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        clearFilter(btn.dataset.uxClear);
+      });
+    });
+  }
+
+  function enhanceCurrentRows(){
+    const rows = document.querySelectorAll('#tableBody tr[data-id]');
+    rows.forEach(row=>{
+      const t = tasks.find(x => x.id === row.dataset.id);
+      if(!t) return;
+
+      row.classList.remove('ux-row-overdue','ux-row-due-soon','ux-row-red','ux-row-amber');
+
+      const dl = daysLeft(t);
+      if(dl !== null && dl < 0 && t.status !== 'Completed') row.classList.add('ux-row-overdue');
+      else if(dl !== null && dl <= 14 && t.status !== 'Completed') row.classList.add('ux-row-due-soon');
+
+      if(t.rag === 'Red') row.classList.add('ux-row-red');
+      if(t.rag === 'Amber') row.classList.add('ux-row-amber');
+
+      const first = row.querySelector('td.task-name');
+      if(first && !first.querySelector('.ux-row-note')){
+        const tokenClass = t.rag === 'Red' ? 'red' : (t.rag === 'Amber' ? 'amber' : 'green');
+        const note = document.createElement('div');
+        note.className = 'ux-row-note';
+        note.innerHTML =
+          '<span class="ux-risk-token ' + tokenClass + '">' + escapeHtml(t.rag) + '</span>' +
+          escapeHtml((ownerList(t).join(', ') || 'No owner') + ' | ' + fmtDate(t) + ' | ' + daysLabel(dl));
+        first.appendChild(note);
+      }
+
+      row.title = buildRowTitle(t);
+    });
+  }
+
+  function updateCompactButton(){
+    const btn = document.getElementById('uxCompactBtn');
+    if(!btn) return;
+    btn.classList.toggle('active', !!prefs.compact);
+    btn.textContent = prefs.compact ? 'Comfort view' : 'Compact view';
+  }
+
+  function updateHealthLine(){
+    const el = document.getElementById('uxHealthSummary');
+    if(!el) return;
+
+    const open = tasks.filter(t => t.status !== 'Completed');
+    const overdue = open.filter(t => {
+      const dl = daysLeft(t);
+      return dl !== null && dl < 0;
+    }).length;
+    const amberRed = open.filter(t => t.rag === 'Amber' || t.rag === 'Red').length;
+    const highCritical = open.filter(t => t.priority === 'High' || t.priority === 'Critical').length;
+    const withoutDue = open.filter(t => !t.dueISO).length;
+
+    let health = 'Stable';
+    if(overdue > 0 || amberRed > 5) health = 'Needs attention';
+    if(open.some(t => t.rag === 'Red')) health = 'Escalation required';
+
+    el.innerHTML =
+      '<strong>Portfolio health: ' + escapeHtml(health) + '</strong>' +
+      ' | Open: ' + open.length +
+      ' | Overdue: ' + overdue +
+      ' | Amber or red: ' + amberRed +
+      ' | High or critical: ' + highCritical +
+      ' | No due date: ' + withoutDue;
+  }
+
+  function ownerConcentration(list){
+    const map = {};
+    list.forEach(t=>{
+      ownerList(t).forEach(o=>{
+        map[o] = (map[o] || 0) + 1;
+      });
+    });
+    return Object.keys(map)
+      .map(owner => ({owner, count:map[owner]}))
+      .sort((a,b)=> b.count - a.count || a.owner.localeCompare(b.owner));
+  }
+
+  function ownerList(t){
+    if(t.owners && Array.isArray(t.owners) && t.owners.length){
+      return t.owners.filter(Boolean).map(x => String(x).trim()).filter(Boolean);
+    }
+    if(t.owner){
+      return String(t.owner).split(',').map(x => x.trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  function severityScore(t){
+    let score = 0;
+    const dl = daysLeft(t);
+    if(t.rag === 'Red') score += 100;
+    if(t.rag === 'Amber') score += 55;
+    if(t.priority === 'Critical') score += 80;
+    if(t.priority === 'High') score += 45;
+    if(dl !== null && dl < 0) score += 120;
+    if(dl !== null && dl >= 0 && dl <= 7) score += 35;
+    if(dl !== null && dl > 7 && dl <= 14) score += 15;
+    if(t.status === 'In Progress') score += 5;
+    return score;
+  }
+
+  function buildRowTitle(t){
+    const dl = daysLeft(t);
+    return [
+      t.task,
+      'Team: ' + t.team,
+      'Priority: ' + t.priority,
+      'Status: ' + t.status,
+      'RAG: ' + t.rag,
+      'Owner: ' + (ownerList(t).join(', ') || 'n/a'),
+      'Due: ' + fmtDate(t),
+      'Days left: ' + daysLabel(dl)
+    ].join('\n');
+  }
+
+  function clearFilter(key){
+    if(key === 'search'){
+      state.search = '';
+      const el = document.getElementById('searchBox');
+      if(el) el.value = '';
+    }else if(key === 'hideCompleted'){
+      state.hideCompleted = false;
+    }else if(key === 'radarMonth'){
+      state.radarMonth = 'all';
+    }else if(['team','priority','status','rag','owner'].includes(key)){
+      state[key] = 'all';
+    }
+    syncControlsFromState();
+    render();
+  }
+
+  function syncControlsFromState(){
+    const map = {
+      filterTeam:'team',
+      filterPriority:'priority',
+      filterStatus:'status',
+      filterRag:'rag',
+      filterOwner:'owner'
+    };
+
+    Object.entries(map).forEach(([id, key])=>{
+      const el = document.getElementById(id);
+      if(el) el.value = state[key];
+    });
+
+    const search = document.getElementById('searchBox');
+    if(search) search.value = state.search || '';
+
+    const hide = document.getElementById('hideCompleted');
+    if(hide) hide.checked = !!state.hideCompleted;
+  }
+
+  function scrollToFirstRiskRow(){
+    const row = document.querySelector('#tableBody tr.ux-row-overdue, #tableBody tr.ux-row-red, #tableBody tr.ux-row-amber, #tableBody tr.ux-row-due-soon');
+    if(row){
+      row.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+
+  function focusSearch(){
+    const search = document.getElementById('searchBox');
+    if(search){
+      search.focus();
+      search.select();
+    }
+  }
+
+  function closeTopModal(){
+    const overlays = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden)'));
+    if(!overlays.length) return;
+    const top = overlays[overlays.length - 1];
+    if(top.id === 'uxHelpOverlay'){
+      top.remove();
+    }else{
+      top.classList.add('hidden');
+    }
+  }
+
+  function safeMonthLabel(key){
+    try{
+      if(typeof monthLabel === 'function') return monthLabel(key);
+    }catch(e){}
+    return key;
+  }
+
+  function setText(id, value){
+    const el = document.getElementById(id);
+    if(el) el.textContent = value;
+  }
+
+  function downloadBackup(){
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      cockpit: 'LOD2 Task Cockpit',
+      tasks: typeof tasks !== 'undefined' ? tasks : [],
+      state: typeof state !== 'undefined' ? state : {},
+      teams: safeLoad('lod2-teams-data'),
+      quickNotes: safeLoad('lod2-quick-notes'),
+      calendar: safeLoad('lod2-calendar'),
+      riskActivityPlan: safeLoad('lod2-rap-data'),
+      riskActivityPlanStatus: safeLoad('lod2-rap-status')
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'LOD2_Task_Cockpit_Backup_' + toISO(new Date()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function safeLoad(key){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function openUxHelp(){
+    const old = document.getElementById('uxHelpOverlay');
+    if(old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'uxHelpOverlay';
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:680px;">
+        <h2>How to use the cockpit effectively</h2>
+        <ol class="ux-help-list">
+          <li>Start from <strong>Immediate attention</strong>. It combines overdue items, red RAG items and high priority amber items.</li>
+          <li>Use <strong>Sort by urgency</strong> before team meetings. It puts the most time critical items at the top and keeps completed items hidden.</li>
+          <li>Use the <strong>Log</strong> button on material tasks to document escalations, dependencies, management decisions and blockers.</li>
+          <li>Use <strong>Data quality</strong> before producing reports. Missing owners, missing due dates and completed tasks without actual effort weaken the management view.</li>
+          <li>Use <strong>Weekly report</strong> for a CRO update and <strong>FTE Report</strong> for capacity discussions. The quality depends on realistic effort estimates.</li>
+          <li>Use <strong>Backup data</strong> before large changes. It exports tasks, quick notes, calendar items, team settings and the Risk Activity Plan.</li>
+        </ol>
+        <div style="margin-top:14px;font-size:12px;color:var(--text-muted);line-height:1.5;">
+          Shortcuts: <span class="ux-kbd">/</span> focuses search, <span class="ux-kbd">Esc</span> closes the top modal, <span class="ux-kbd">Ctrl</span> + <span class="ux-kbd">B</span> switches between table and board view.
+        </div>
+        <div class="modal-actions">
+          <div class="left"></div>
+          <div class="right"><button class="save-btn" id="uxHelpCloseBtn">Close</button></div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    document.getElementById('uxHelpCloseBtn').addEventListener('click', ()=> overlay.remove());
+    overlay.addEventListener('click', e => {
+      if(e.target.id === 'uxHelpOverlay') overlay.remove();
+    });
+  }
+
+  bootUx();
+})();
+</script>
+
+
+</html>
